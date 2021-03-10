@@ -1,0 +1,22 @@
+{
+  "q_c" : 0.01,
+  "q_l" : 1000.0,
+  "q_vs" : 0.2,
+  "q_beta":  5,
+
+  "r_accel_D" : 1E-3,
+  "r_steering_angle" : 1E-3,
+  "r_vs" : 1E-5,
+
+  "r_d_accel_D" : 1E-1,
+  "r_d_steering_angle" : 5E2,
+  "r_d_vs" : 1E-4,
+
+  "sc_quad_track": 100.0,
+  "sc_quad_tire": 100.0,
+  "sc_quad_alpha": 100.0,
+
+  "sc_lin_track": 10.0,
+  "sc_lin_tire": 10.0,
+  "sc_lin_alpha": 10.0
+}

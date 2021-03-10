@@ -27,7 +27,19 @@ add_executable(mpcc
         splines/cubic_spline.cpp
         splines/cubic_spline.h
         splines/cubic_spline2d.cpp
-        splines/cubic_spline2d.h)
+        splines/cubic_spline2d.h
+        costs/contouring_cost.cpp
+        costs/contouring_cost.h
+        costs/cost_types.h
+        params/cost_params.cpp
+        params/cost_params.h
+        costs/input_cost.cpp
+        costs/input_cost.h
+        costs/soft_constraints_cost.cpp
+        costs/soft_constraints_cost.h
+        constraints/constraint_types.h
+        costs/slip_angle_cost.cpp
+        costs/slip_angle_cost.h)
 
 # For matplotlib
 find_package(PythonLibs REQUIRED)

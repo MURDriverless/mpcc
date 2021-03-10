@@ -1,0 +1,22 @@
+# IDE
+.idea/
+
+# Catkin and CMake generated files
+atomic_configure/
+catkin/
+catkin_generated
+cmake-build-debug/
+CMakeFiles/
+devel/
+gtest/
+cmake_install.cmake
+CMakeCache.txt
+Makefile
+
+# Executables
+*.cbp
+mpcc
+
+# Statically linked libraries. These can be installed
+# by running ./install.sh
+External/

@@ -16,7 +16,12 @@ include_directories(External/Json/include)
 
 add_executable(mpcc
         main.cpp
-)
+        models/state.h
+        models/model_interface.h
+        models/dynamic_bicycle.h
+        models/dynamic_bicycle.cpp
+        params/model_params.h
+        params/model_params.cpp)
 
 # For matplotlib
 find_package(PythonLibs REQUIRED)

@@ -21,7 +21,13 @@ add_executable(mpcc
         models/dynamic_bicycle.h
         models/dynamic_bicycle.cpp
         params/model_params.h
-        params/model_params.cpp)
+        params/model_params.cpp
+        utils/binary_search.h
+        utils/binary_search.cpp
+        splines/cubic_spline.cpp
+        splines/cubic_spline.h
+        splines/cubic_spline2d.cpp
+        splines/cubic_spline2d.h)
 
 # For matplotlib
 find_package(PythonLibs REQUIRED)

@@ -2,13 +2,13 @@
 // Created by Dennis Wirya (dwirya@student.unimelb.edu.au).
 // Copyright (c) 2021 MUR Driverless. All rights reserved.
 //
-#ifndef MPCC_DYNAMIC_BICYCLE_H
-#define MPCC_DYNAMIC_BICYCLE_H
+#ifndef MPCC_DYNAMIC_BICYCLE_MODEL_H
+#define MPCC_DYNAMIC_BICYCLE_MODEL_H
 
 #include <unsupported/Eigen/MatrixFunctions>
-#include "../params/model_params.h"
 #include "state.h"
 #include "model_interface.h"
+#include "model_params.h"
 
 // Refers to front and rear tire forces
 struct TireForces {
@@ -57,4 +57,4 @@ private:
     LinModelMatrix calcContinuousJacobian(const State &xk, const Input &uk) const;
 };
 
-#endif //MPCC_DYNAMIC_BICYCLE_H
+#endif //MPCC_DYNAMIC_BICYCLE_MODEL_H

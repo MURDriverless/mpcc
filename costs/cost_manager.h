@@ -6,9 +6,9 @@
 #define MPCC_COST_MANAGER_H
 
 #include "../constraints/constraint_types.h"
-#include "../params/cost_params.h"
-#include "../params/model_params.h"
+#include "../models/model_params.h"
 #include "../splines/cubic_spline2d.h"
+#include "cost_params.h"
 #include "contouring_error.h"
 #include "cost_types.h"
 #include "slip_angle.h"

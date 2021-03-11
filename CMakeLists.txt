@@ -18,10 +18,10 @@ add_executable(mpcc
         main.cpp
         models/state.h
         models/model_interface.h
-        models/dynamic_bicycle.h
-        models/dynamic_bicycle.cpp
-        params/model_params.h
-        params/model_params.cpp
+        models/dynamic_bicycle_model.h
+        models/dynamic_bicycle_model.cpp
+        models/model_params.h
+        models/model_params.cpp
         utils/binary_search.h
         utils/binary_search.cpp
         splines/cubic_spline.cpp
@@ -29,8 +29,8 @@ add_executable(mpcc
         splines/cubic_spline2d.cpp
         splines/cubic_spline2d.h
         costs/cost_types.h
-        params/cost_params.cpp
-        params/cost_params.h
+        costs/cost_params.cpp
+        costs/cost_params.h
         constraints/constraint_types.h
         costs/contouring_error.cpp
         costs/contouring_error.h

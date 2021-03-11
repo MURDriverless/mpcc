@@ -5,7 +5,7 @@
 #ifndef MPCC_CONSTRAINT_MANAGER_H
 #define MPCC_CONSTRAINT_MANAGER_H
 
-#include "../models/dynamic_bicycle.h"
+#include "../models/dynamic_bicycle_model.h"
 #include "constraint_types.h"
 #include "tire_ellipsis_constraint.h"
 #include "tire_slip_constraint.h"

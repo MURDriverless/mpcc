@@ -5,7 +5,7 @@
 #ifndef MPCC_TIRE_SLIP_CONSTRAINT_H
 #define MPCC_TIRE_SLIP_CONSTRAINT_H
 
-#include "../models/dynamic_bicycle.h"
+#include "../models/dynamic_bicycle_model.h"
 #include "../models/state.h"
 #include "constraint_types.h"
 

@@ -13,7 +13,7 @@ using Eigen::VectorXd;
 
 class CubicSpline {
 public:
-    CubicSpline();
+    CubicSpline() = default;
     CubicSpline(const VectorXd &t_data, const VectorXd &ft_data);
     int searchIndex(double t) const;
     double getPosition(double t) const;

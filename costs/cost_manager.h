@@ -15,8 +15,7 @@
 
 class CostManager {
 public:
-    CostManager();
-    CostManager(CostParams *cost_params, ModelParams *model_params);
+    CostManager(const CostParams &cost_params, const ModelParams &model_params);
     CostMatrix getCost(const CubicSpline2D &path, const State &xk) const;
 private:
     CostTerm<Q_MPC, q_MPC> getContouringCost(const CubicSpline2D &path, const State &xk) const;
@@ -25,8 +24,8 @@ private:
     CostTerm<Z_MPC, z_MPC> getSoftConstraintsCost() const;
     CostTerm<Q_MPC, q_MPC> getBetaCost(const State &xk) const;
 
-    CostParams *costParams;
-    ModelParams *modelParams;
+    CostParams costParams;
+    ModelParams modelParams;
 };
 
 #endif //MPCC_COST_MANAGER_H

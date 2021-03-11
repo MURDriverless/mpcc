@@ -4,8 +4,6 @@
 //
 #include "cubic_spline.h"
 
-CubicSpline::CubicSpline() = default;
-
 CubicSpline::CubicSpline(const VectorXd &t_data, const VectorXd &ft_data) {
     t_spline = t_data;
     ft_spline = ft_data;

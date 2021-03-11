@@ -11,7 +11,7 @@
 
 class CostParams {
 public:
-    CostParams();
+    CostParams() = default;
     explicit CostParams(const std::string &file_path);
 
     double q_c;

@@ -17,7 +17,7 @@ using Eigen::Vector2d;
 
 class CubicSpline2D {
 public:
-    CubicSpline2D();
+    CubicSpline2D() = default;
     CubicSpline2D(const VectorXd &x_data, const VectorXd &y_data, double max_dist_proj_params);
     double getLength() const;
     Vector2d getPosition(double s) const;
@@ -32,7 +32,7 @@ private:
     VectorXd s_vector;
     CubicSpline sx;
     CubicSpline sy;
-    double max_dist_proj;
+    double max_dist_proj = 3.0;  // TODO: find out what 3.0 means
 };
 
 #endif //MPCC_CUBIC_SPLINE2D_H

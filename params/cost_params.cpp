@@ -6,15 +6,6 @@
 
 using json = nlohmann::json;
 
-CostParams::CostParams() {
-    // Assign all fields to be 0.0
-    q_c = q_l = q_vs = q_beta = 0.0;
-    r_accel_D, r_steering_angle, r_vs = 0.0;
-    r_d_accel_D, r_d_steering_angle, r_d_vs = 0.0;
-    sc_quad_track = sc_quad_tire = sc_quad_alpha = 0.0;
-    sc_lin_track = sc_lin_tire = sc_lin_alpha = 0.0;
-}
-
 CostParams::CostParams(const std::string &file_path) {
     std::ifstream file_stream(file_path);
     json jsonCost = json::parse(file_stream);

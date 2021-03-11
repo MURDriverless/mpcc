@@ -6,12 +6,6 @@
 
 using json = nlohmann::json;
 
-ModelParams::ModelParams() {
-    // Assign all fields to be 0.0
-    Cm1 = Cm2 = Cr0 = Cr2 = Br = Cr = Dr = Bf = Cf = Df = m = Iz = lf = lr =
-    car_l = car_w = g = e_long = e_eps = max_alpha = vx_zero = 0.0;
-}
-
 ModelParams::ModelParams(const std::string &file_path) {
     std::ifstream file_stream(file_path);
     json jsonModel = json::parse(file_stream);

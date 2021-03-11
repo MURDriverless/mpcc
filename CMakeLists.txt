@@ -43,7 +43,7 @@ add_executable(mpcc
         constraints/track_constraint.cpp
         constraints/track_constraint.h
         splines/track.h
-        constraints/tire_ellipsis_constraint.cpp 
+        constraints/tire_ellipsis_constraint.cpp
         constraints/tire_ellipsis_constraint.h
         constraints/tire_slip_constraint.cpp
         constraints/tire_slip_constraint.h)

@@ -7,8 +7,6 @@
 using Eigen::ArrayXd;
 using std::vector;
 
-CubicSpline2D::CubicSpline2D() { max_dist_proj = 3.0; };
-
 CubicSpline2D::CubicSpline2D(const VectorXd &x_data, const VectorXd &y_data, double max_dist_proj_params) {
     s_vector = cumulativeSum(calcLineDistances(x_data, y_data));
     sx = CubicSpline(s_vector, x_data);

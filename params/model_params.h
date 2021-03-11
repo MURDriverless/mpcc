@@ -11,7 +11,7 @@
 
 class ModelParams {
 public:
-    ModelParams();
+    ModelParams() = default;
     explicit ModelParams(const std::string &file_path);
 
     // Coefficients for determining longitudinal forces

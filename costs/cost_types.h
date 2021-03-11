@@ -36,8 +36,8 @@ struct CostMatrix {
 // Return type for contouring, input, soft constraints and slip angle cost functions
 template <class QuadCost, class LinCost>
 struct CostTerm {
-    QuadCost quad;
-    LinCost lin;
+    QuadCost quad_cost;
+    LinCost lin_cost;
 };
 
 #endif //MPCC_COST_TYPES_H

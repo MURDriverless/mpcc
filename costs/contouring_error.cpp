@@ -2,37 +2,9 @@
 // Created by Dennis Wirya (dwirya@student.unimelb.edu.au).
 // Copyright (c) 2021 MUR Driverless. All rights reserved.
 //
-#include "contouring_cost.h"
+#include "contouring_error.h"
 
-ContouringCost::ContouringCost() {
-    costParams = nullptr;
-    modelParams = nullptr;
-};
-
-ContouringCost::ContouringCost(CostParams *cost_params, ModelParams *model_params) {
-    costParams = cost_params;
-    modelParams = model_params;
-}
-
-CostTerm<Q_MPC, q_MPC> ContouringCost::getCost(const CubicSpline2D &path, const State &xk) const {
-    const ContouringError contour_error = getContouringError(path, xk);
-    const Matrix<double, 2, 1> error_bar = contour_error.error - contour_error.d_error * xk;
-
-    Matrix<double, 2, 2> contouring_weights = Matrix<double, 2, 2>::Zero();
-    contouring_weights(0, 0) = costParams->q_c;
-    contouring_weights(1, 1) = costParams->q_l;
-
-    // TODO: Link Github issue or post in README on the error linearisation maths
-    Q_MPC Q = contour_error.d_error.transpose() * contouring_weights * contour_error.d_error;
-    q_MPC q = 2 * error_bar.transpose() * contouring_weights * contour_error.d_error;
-
-    // Maximise progression via virtual input
-    Q(IndexMap.vs, IndexMap.vs) = -costParams->q_vs;
-
-    return { Q, q };
-}
-
-RefPoint ContouringCost::getRefPoint(const CubicSpline2D &path, const State &xk) {
+RefPoint ContouringErrorDelegate::getRefPoint(const CubicSpline2D &path, const State &xk) {
     const double theta_path = xk(IndexMap.s);
     const Vector2d x_y = path.getPosition(theta_path);
     const Vector2d dx_dy = path.getDerivative(theta_path);
@@ -57,7 +29,7 @@ RefPoint ContouringCost::getRefPoint(const CubicSpline2D &path, const State &xk)
     return { x, y, dx, dy, yaw, dyaw };
 }
 
-ContouringError ContouringCost::getContouringError(const CubicSpline2D &path, const State &xk) {
+ContouringError ContouringErrorDelegate::getContouringError(const CubicSpline2D &path, const State &xk) {
     const RefPoint ref = getRefPoint(path, xk);
     Matrix<double, 2, 1> error = Matrix<double, 2, 1>::Zero();
     Matrix<double, 2, NX> d_error = Matrix<double, 2, NX>::Zero();

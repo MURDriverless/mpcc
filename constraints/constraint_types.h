@@ -5,7 +5,7 @@
 #ifndef MPCC_CONSTRAINT_TYPES_H
 #define MPCC_CONSTRAINT_TYPES_H
 
-struct ConstraintIndex {
+struct ConstraintIndexStruct {
     int track = 0;  // constrain the car within the track
     int tire_rear = 1;   // rear tire force ellipsis
     int tire_front = 2;  // front tire force ellipsis
@@ -13,6 +13,6 @@ struct ConstraintIndex {
     int alpha_front = 4; // front tire slip angle
 };
 
-static const ConstraintIndex ConstraintMap;
+static const ConstraintIndexStruct ConstraintIndex;
 
 #endif //MPCC_CONSTRAINT_TYPES_H

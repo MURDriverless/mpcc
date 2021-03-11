@@ -37,7 +37,16 @@ add_executable(mpcc
         costs/cost_manager.cpp
         costs/cost_manager.h
         costs/slip_angle.cpp
-        costs/slip_angle.h)
+        costs/slip_angle.h
+        constraints/constraint_manager.cpp
+        constraints/constraint_manager.h
+        constraints/track_constraint.cpp
+        constraints/track_constraint.h
+        splines/track.h
+        constraints/tire_ellipsis_constraint.cpp 
+        constraints/tire_ellipsis_constraint.h
+        constraints/tire_slip_constraint.cpp
+        constraints/tire_slip_constraint.h)
 
 # For matplotlib
 find_package(PythonLibs REQUIRED)

@@ -6,9 +6,7 @@
 #define MPCC_COST_TYPES_H
 
 #include "../models/state.h"
-
-// Number of soft constraints (we have 5 for all our constraints):
-#define NS 5
+#include "../constraints/constraint_types.h"
 
 // Quadratic cost
 typedef Matrix<double, NX, NX> Q_MPC;  // Error cost

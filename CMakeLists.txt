@@ -46,7 +46,9 @@ add_executable(mpcc
         constraints/tire_ellipsis_constraint.cpp
         constraints/tire_ellipsis_constraint.h
         constraints/tire_slip_constraint.cpp
-        constraints/tire_slip_constraint.h)
+        constraints/tire_slip_constraint.h
+        bounds/bounds_manager.cpp
+        bounds/bounds_manager.h)
 
 # For matplotlib
 find_package(PythonLibs REQUIRED)

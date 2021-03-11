@@ -22,8 +22,8 @@ add_executable(mpcc
         models/dynamic_bicycle_model.cpp
         models/model_params.h
         models/model_params.cpp
-        utils/binary_search.h
-        utils/binary_search.cpp
+        splines/binary_search.h
+        splines/binary_search.cpp
         splines/cubic_spline.cpp
         splines/cubic_spline.h
         splines/cubic_spline2d.cpp

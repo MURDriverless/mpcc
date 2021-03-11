@@ -7,7 +7,7 @@
 
 #include <iostream>
 #include <Eigen/Dense>
-#include "../utils/binary_search.h"
+#include "binary_search.h"
 
 using Eigen::VectorXd;
 

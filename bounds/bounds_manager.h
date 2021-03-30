@@ -8,14 +8,7 @@
 #include <string>
 #include <fstream>
 #include <nlohmann/json.hpp>
-#include <Eigen/Dense>
-#include "../constraints/constraint_types.h"
-#include "../models/state.h"
-
-// Bounds matrices
-typedef Eigen::Matrix<double, NX, 1> Bounds_x;
-typedef Eigen::Matrix<double, NU, 1> Bounds_u;
-typedef Eigen::Matrix<double, NS, 1> Bounds_s;
+#include "bounds_types.h"
 
 class BoundsManager {
 public:

@@ -48,6 +48,7 @@ public:
     double max_alpha;
     // Placeholder to prevent division of vx=0 in our model
     double vx_zero;
+    double initial_vx;
 };
 
 #endif //MPCC_MODEL_PARAMS_H

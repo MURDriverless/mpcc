@@ -32,4 +32,5 @@ ModelParams::ModelParams(const std::string &file_path) {
     e_eps = jsonModel["e_eps"];
     max_alpha = jsonModel["max_alpha"];
     vx_zero = jsonModel["vx_zero"];
+    initial_vx = jsonModel["initial_vx"];
 }

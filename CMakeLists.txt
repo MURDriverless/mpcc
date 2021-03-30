@@ -48,7 +48,16 @@ add_executable(mpcc
         constraints/tire_slip_constraint.cpp
         constraints/tire_slip_constraint.h
         bounds/bounds_manager.cpp
-        bounds/bounds_manager.h)
+        bounds/bounds_manager.h
+        mpc/mpc.cpp
+        mpc/mpc.h
+        mpc/mpc_types.h
+        bounds/bounds_types.h
+        mpc/mpc_params.cpp
+        mpc/mpc_params.h
+        models/state.cpp
+        solvers/hpipm_interface.cpp
+        solvers/hpipm_interface.h)
 
 # For matplotlib
 find_package(PythonLibs REQUIRED)

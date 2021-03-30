@@ -15,8 +15,9 @@
 
 class CostManager {
 public:
+    CostManager() = default;
     CostManager(const CostParams &cost_params, const ModelParams &model_params);
-    CostMatrix getCost(const CubicSpline2D &path, const State &xk) const;
+    CostMatrix getCosts(const CubicSpline2D &path, const State &xk) const;
 private:
     CostTerm<Q_MPC, q_MPC> getContouringCost(const CubicSpline2D &path, const State &xk) const;
     CostTerm<Q_MPC, q_MPC> getRawInputCost() const;

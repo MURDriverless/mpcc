@@ -13,6 +13,7 @@
 
 class ConstraintManager {
 public:
+    ConstraintManager() = default;
     explicit ConstraintManager(const DynamicBicycleModel &model_args);
     ConstraintsMatrix getConstraints(const Track &track, const State &xk) const;
 private:

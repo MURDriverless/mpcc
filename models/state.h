@@ -56,4 +56,9 @@ struct LinModelMatrix {
 
 static const StateInputIndex IndexMap;
 
+namespace mpcc {
+    State vxNonZero(const State &xk, double min_vx);
+    State constrainState(const State &xk, double path_length);
+}
+
 #endif //MPCC_STATE_H

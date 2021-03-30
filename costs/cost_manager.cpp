@@ -9,7 +9,7 @@ CostManager::CostManager(const CostParams &cost_params, const ModelParams &model
     modelParams = model_params;
 }
 
-CostMatrix CostManager::getCost(const CubicSpline2D &path, const State &xk) const {
+CostMatrix CostManager::getCosts(const CubicSpline2D &path, const State &xk) const {
     CostTerm<Q_MPC, q_MPC> contouring = getContouringCost(path, xk);
     CostTerm<Q_MPC, q_MPC> raw_input = getRawInputCost();
     CostTerm<R_MPC, r_MPC> input_change = getInputChangeCost();

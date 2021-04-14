@@ -167,7 +167,7 @@ array<OptVariable, N + 1> HpipmInterface::solveMPC(array<OptStage, N + 1> &stage
 
 array<OptVariable, N + 1> HpipmInterface::solve(int *status) {
     // ocp qp dim
-    int dim_size = d_ocp_qp_dim_memsize(N);
+    hpipm_size_t dim_size = d_ocp_qp_dim_memsize(N);
     void *dim_mem = malloc(dim_size);
 
     struct d_ocp_qp_dim dim;
@@ -175,7 +175,7 @@ array<OptVariable, N + 1> HpipmInterface::solve(int *status) {
 
     d_ocp_qp_dim_set_all(nx, nu, nbx, nbu, ng, nsbx, nsbu, nsg, &dim);
     // ocp qp
-    int qp_size = d_ocp_qp_memsize(&dim);
+    hpipm_size_t qp_size = d_ocp_qp_memsize(&dim);
     void *qp_mem = malloc(qp_size);
 
     struct d_ocp_qp qp;
@@ -186,13 +186,13 @@ array<OptVariable, N + 1> HpipmInterface::solve(int *status) {
                      hsid, hlls, hlus, &qp);
 
     // ocp qp sol
-    int qp_sol_size = d_ocp_qp_sol_memsize(&dim);
+    hpipm_size_t qp_sol_size = d_ocp_qp_sol_memsize(&dim);
     void *qp_sol_mem = malloc(qp_sol_size);
 
     struct d_ocp_qp_sol qp_sol;
     d_ocp_qp_sol_create(&dim, &qp_sol, qp_sol_mem);
 
-    int ipm_arg_size = d_ocp_qp_ipm_arg_memsize(&dim);
+    hpipm_size_t ipm_arg_size = d_ocp_qp_ipm_arg_memsize(&dim);
     printf("\nipm arg size = %d\n", ipm_arg_size);
     void *ipm_arg_mem = malloc(ipm_arg_size);
 
@@ -229,7 +229,7 @@ array<OptVariable, N + 1> HpipmInterface::solve(int *status) {
 //    d_ocp_qp_ipm_arg_set_pred_corr(&pred_corr, &arg);
 //    d_ocp_qp_ipm_arg_set_ric_alg(&ric_alg, &arg);
 
-    int ipm_size = d_ocp_qp_ipm_ws_memsize(&dim, &arg);
+    hpipm_size_t ipm_size = d_ocp_qp_ipm_ws_memsize(&dim, &arg);
 //    printf("\nipm size = %d\n", ipm_size);
     void *ipm_mem = malloc(ipm_size);
 
@@ -297,4 +297,17 @@ array<OptVariable, N + 1> HpipmInterface::solve(int *status) {
         optimal_solution[i].uk(IndexMap.d_vs) = u[IndexMap.d_vs];
     }
     optimal_solution[N].uk.setZero();
+
+    free(dim_mem);
+    free(qp_mem);
+    free(qp_sol_mem);
+    free(ipm_arg_mem);
+    free(ipm_mem);
+
+    free(u);
+    free(x);
+
+    *status = hpipm_return;
+
+    return optimal_solution;
 }

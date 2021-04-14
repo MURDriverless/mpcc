@@ -28,8 +28,9 @@ VectorXd CubicSpline2D::calcLineDistances(const VectorXd &x_data, const VectorXd
 VectorXd CubicSpline2D::cumulativeSum(const VectorXd &xy_data) {
     double sum = 0.0; int i;
     VectorXd arr = VectorXd::Zero(xy_data.size());
-    for (i = 0; i <= xy_data.size(); i++) {
-        arr(i) = sum + arr(i);
+    for (i = 0; i < xy_data.size(); i++) {
+        arr(i) = sum + xy_data(i);
+        sum += xy_data(i);
     }
     return arr;
 }

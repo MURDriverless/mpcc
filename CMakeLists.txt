@@ -3,7 +3,8 @@ project(mpcc)
 
 set(CMAKE_CXX_STANDARD 14)
 # Release build, full optimisation
-set(CMAKE_CXX_FLAGS "-O2")
+set(CMAKE_CXX_FLAGS "-O3")
+#set(CMAKE_BUILD_TYPE Debug)
 
 # Static link the libraries under External
 # The libraries can be obtained by running install.sh
@@ -57,7 +58,7 @@ add_executable(mpcc
         mpc/mpc_params.h
         models/state.cpp
         solvers/hpipm_interface.cpp
-        solvers/hpipm_interface.h)
+        solvers/hpipm_interface.h splines/track.cpp)
 
 # For matplotlib
 find_package(PythonLibs REQUIRED)

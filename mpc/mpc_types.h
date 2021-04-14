@@ -45,7 +45,7 @@ struct OptStage {
 struct OptSolution {
     const Input u0;
     const std::array<OptVariable, N+1> opt_vars;
-    const double exec_time
+    const double exec_time;
 };
 
 #endif //MPCC_MPC_TYPES_H

@@ -25,5 +25,6 @@
 
   "max_alpha" : 0.15,
 
-  "vx_zero": 0.3
+  "vx_zero": 0.3,
+  "initial_vx": 15.0
 }

@@ -5,20 +5,27 @@
 #ifndef MPCC_HPIPM_INTERFACE_H
 #define MPCC_HPIPM_INTERFACE_H
 
+#include <stdlib.h>
+#include <iostream>
 #include <array>
 #include <sys/time.h>
 #include <vector>
 #include <Eigen/Dense>
+
+#include <blasfeo_d_aux_ext_dep.h>
+
+#include "hpipm_d_ocp_qp_ipm.h"
+#include "hpipm_d_ocp_qp_dim.h"
+#include "hpipm_d_ocp_qp.h"
+#include "hpipm_d_ocp_qp_sol.h"
+#include "hpipm_timing.h"
+
 #include "../models/state.h"
 #include "../mpc/mpc_types.h"
 
 using std::array;
 using std::vector;
 using Eigen::Matrix;
-
-#include <blasfeo_d_aux_ext_dep.h>
-
-#include "hpipm_d_ocp_qp_ipm.h"
 
 struct HpipmBounds {
     vector<int> idx_u;

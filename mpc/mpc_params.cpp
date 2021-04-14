@@ -13,7 +13,7 @@ MPCParams::MPCParams(const std::string &file_path) {
     n_sqp = jsonConfig["n_sqp"];
     sqp_mixing = jsonConfig["sqp_mixing"];
     n_non_solves = jsonConfig["n_non_solves"];
-    n_no_solvers_sqp = jsonConfig["n_no_solvers_sqp"];
+    n_no_solves_sqp = jsonConfig["n_no_solves_sqp"];
     n_reset = jsonConfig["n_reset"];
     Ts = jsonConfig["Ts"];
 }

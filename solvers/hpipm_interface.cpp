@@ -17,6 +17,8 @@ void HpipmInterface::setDynamics(array<OptStage, N + 1> &stages, const State &x0
             hA[i] = stages[i].model.A.data();
             hB[i] = stages[i].model.B.data();
             hb[i] = stages[i].model.g.data();
+            nx[i] = NX;
+            nu[i] = NU;
         }
     }
     nx[N] = NX;
@@ -60,13 +62,13 @@ void HpipmInterface::setBounds(array<OptStage, N + 1> &stages, const State &x0) 
         }
     }
     nbx[0] = 0;
-    hbxid[0] = nullptr;
-    hbuid[0] = hpipm_bounds[0].idx_u.data();
+    hidxbx[0] = nullptr;
+    hidxbu[0] = hpipm_bounds[0].idx_u.data();
 
-    hbxl[0] = nullptr;
-    hbxu[0] = nullptr;
-    hbul[0] = hpipm_bounds[0].u_lower.data();
-    hbuu[0] = hpipm_bounds[0].u_upper.data();
+    hlbx[0] = nullptr;
+    hubx[0] = nullptr;
+    hlbu[0] = hpipm_bounds[0].u_lower.data();
+    hubu[0] = hpipm_bounds[0].u_upper.data();
 
     for (int i = 1; i <= N; i++) {
         hpipm_bounds[i].idx_u.resize(0);
@@ -83,8 +85,8 @@ void HpipmInterface::setBounds(array<OptStage, N + 1> &stages, const State &x0) 
         }
 
         hpipm_bounds[i].idx_x.resize(0);
-        hpipm_bounds[i].u_lower.resize(0);
-        hpipm_bounds[i].u_upper.resize(0);
+        hpipm_bounds[i].x_lower.resize(0);
+        hpipm_bounds[i].x_upper.resize(0);
         nbx[i] = 0;
         for (int j = 0; j < NX; j++) {
             if (stages[i].x_lower(j) > -INF && stages[i].x_upper(j) < INF) {
@@ -95,18 +97,18 @@ void HpipmInterface::setBounds(array<OptStage, N + 1> &stages, const State &x0) 
             }
         }
 
-        hbxid[i] = hpipm_bounds[i].idx_x.data();
-        hbuid[i] = hpipm_bounds[i].idx_x.data();
-        hbxl[i] = hpipm_bounds[i].x_lower.data();
-        hbul[i] = hpipm_bounds[i].x_upper.data();
-        hbul[i] = hpipm_bounds[i].u_lower.data();
-        hbuu[i] = hpipm_bounds[i].u_upper.data();
+        hidxbx[i] = hpipm_bounds[i].idx_x.data();
+        hidxbu[i] = hpipm_bounds[i].idx_x.data();
+        hlbx[i] = hpipm_bounds[i].x_lower.data();
+        hubx[i] = hpipm_bounds[i].x_upper.data();
+        hlbu[i] = hpipm_bounds[i].u_lower.data();
+        hubu[i] = hpipm_bounds[i].u_upper.data();
     }
 
     nbu[N] = 0;
-    hbxid[N] = nullptr;
-    hbul[N] = nullptr;
-    hbuu[N] = nullptr;
+    hidxbu[N] = nullptr;
+    hlbu[N] = nullptr;
+    hubu[N] = nullptr;
 }
 
 void HpipmInterface::setPolytopicConstraints(array<OptStage, N + 1> &stages) {
@@ -115,13 +117,13 @@ void HpipmInterface::setPolytopicConstraints(array<OptStage, N + 1> &stages) {
         if (stages[i].ng > 0) {
             hC[i] = stages[i].constraints.C.data();
             hD[i] = stages[i].constraints.D.data();
-            hgl[i] = stages[i].constraints.dl.data();
-            hgu[i] = stages[i].constraints.du.data();
+            hlg[i] = stages[i].constraints.dl.data();
+            hug[i] = stages[i].constraints.du.data();
         } else {
             hC[i] = nullptr;
             hD[i] = nullptr;
-            hgl[i] = nullptr;
-            hgu[i] = nullptr;
+            hlg[i] = nullptr;
+            hug[i] = nullptr;
         }
     }
 }
@@ -138,14 +140,14 @@ void HpipmInterface::setSoftConstraints(array<OptStage, N + 1> &stages) {
                 hpipm_bounds[i].idx_s.push_back(j + nbx[i] + nbu[i]);
             }
 
-            hsid[i] = hpipm_bounds[i].idx_s.data();
+            hidxs[i] = hpipm_bounds[i].idx_s.data();
             hlls[i] = stages[i].s_lower.data();
             hlus[i] = stages[i].s_upper.data();
         } else {
             nsbx[i] = 0;
             nsbu[i] = 0;
             nsg[i] = 0;
-            hsid[i] = nullptr;
+            hidxs[i] = nullptr;
             hlls[i] = nullptr;
             hlus[i] = nullptr;
         }
@@ -181,9 +183,9 @@ array<OptVariable, N + 1> HpipmInterface::solve(int *status) {
     struct d_ocp_qp qp;
     d_ocp_qp_create(&dim, &qp, qp_mem);
     d_ocp_qp_set_all(hA, hB, hb, hQ, hS, hR, hq, hr,
-                     hbxid, hbxl, hbxu, hbuid, hbul, hbuu,
-                     hC, hD, hgl, hgu, hZl, hZu, hzl, hzu,
-                     hsid, hlls, hlus, &qp);
+                     hidxbx, hlbx, hubx, hidxbu, hlbu, hubu,
+                     hC, hD, hlg, hug, hZl, hZu, hzl, hzu,
+                     hidxs, hlls, hlus, &qp);
 
     // ocp qp sol
     hpipm_size_t qp_sol_size = d_ocp_qp_sol_memsize(&dim);
@@ -218,7 +220,7 @@ array<OptVariable, N + 1> HpipmInterface::solve(int *status) {
 
     d_ocp_qp_ipm_arg_set_default(mode, &arg);
 
-    // d_ocp_qp_ipm_arg_set_mu0(&mu0, &arg);
+//    d_ocp_qp_ipm_arg_set_mu0(&mu0, &arg);
     d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &arg);
 //    d_ocp_qp_ipm_arg_set_tol_stat(&tol_stat, &arg);
 //    d_ocp_qp_ipm_arg_set_tol_eq(&tol_eq, &arg);
@@ -244,7 +246,7 @@ array<OptVariable, N + 1> HpipmInterface::solve(int *status) {
     d_ocp_qp_ipm_solve(&qp, &qp_sol, &arg, &workspace);
     d_ocp_qp_ipm_get_status(&workspace, &hpipm_return);
     gettimeofday(&tv1, nullptr); // stop
-    double time_ocp_ipm = (tv1.tv_usec-tv0.tv_usec)/(1e6);
+    double time_ocp_ipm = (tv1.tv_usec - tv0.tv_usec)/(1e6);
 
     printf("comp time = %f\n", time_ocp_ipm);
     printf("exitflag %d\n", hpipm_return);

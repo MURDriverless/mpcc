@@ -66,21 +66,21 @@ private:
 
     // Polytopic constraints
     // g_(lower, k) <= Dk*xk + Ck*uk <= g_(upper, k)
-    double *hgl[N+1];
-    double *hgu[N+1];
+    double *hlg[N+1];
+    double *hug[N+1];
     double *hD[N+1];
     double *hC[N+1];
 
     // General bounds
     // x_(lower, k) <= xk <= x_(upper, k)
     // hbxid can be used to select bounds on a subset of states
-    int *hbxid[N+1];
-    double *hbxl[N+1];
-    double *hbxu[N+1];
+    int *hidxbx[N+1];
+    double *hlbx[N+1];
+    double *hubx[N+1];
     // u_(lower, k) <= uk <= u_(upper, k)
-    int *hbuid[N+1];
-    double *hbul[N+1];
-    double *hbuu[N+1];
+    int *hidxbu[N+1];
+    double *hlbu[N+1];
+    double *hubu[N+1];
 
     // Cost (only soft constraints)
     // s_(lower, k) -> slack variable of lower polytopic constraint (3) + lower bounds
@@ -97,7 +97,7 @@ private:
     double *hlus[N+1];
     // index of the bounds and constraints that are softened
     // order is not really clear
-    int *hsid[N+1];
+    int *hidxs[N+1];
 
     // Bounds that are different to stage bounds and need to be stored somewhere
     array<HpipmBounds, N+1> hpipm_bounds;

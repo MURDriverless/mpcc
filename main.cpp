@@ -77,7 +77,8 @@ int main() {
 
     // Run simulation
     int n_sim = 3000;
-    for (int i = 0; i < n_sim; i++) {
+    int i;
+    for (i = 0; i < n_sim; i++) {
         OptSolution mpc_sol = mpc.runMPC(x0);
         x0 = model.predictRK4(x0, mpc_sol.u0, mpc_params.Ts);
         log.push_back(mpc_sol);
@@ -95,6 +96,7 @@ int main() {
     mean_time = mean_time / (double)(n_sim);
     cout << "Mean MPCC time: " << mean_time << endl;
     cout << "Max MPCC time: " << max_time << endl;
+    cout << "i: " << i << endl;
 
     return 0;
 }

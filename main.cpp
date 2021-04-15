@@ -20,6 +20,8 @@
 
 #include "solvers/hpipm_interface.h"
 
+#include "plotter/plotter.h"
+
 using std::string;
 using json = nlohmann::json;
 using std::cout;
@@ -84,10 +86,14 @@ int main() {
         log.push_back(mpc_sol);
     }
 
+    // Run visualisation
+    Plotter plotter = Plotter(0.05, model_params);
+    plotter.plot_simulation(log, track);
+
     // Analyse execution time
     double mean_time = 0.0;
     double max_time = 0.0;
-    for (OptSolution log_i : log) {
+    for (const OptSolution& log_i : log) {
         mean_time += log_i.exec_time;
         if (log_i.exec_time > max_time) {
             max_time = log_i.exec_time;

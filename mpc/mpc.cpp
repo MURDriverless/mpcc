@@ -30,25 +30,18 @@ OptSolution MPC::runMPC(const State &x0) {
     auto t1 = std::chrono::high_resolution_clock::now();
     int solver_status = -1;
     State xk = x0;
-    std::cout << "runMPC xk" << std::endl;
     xk(IndexMap.s) = track.path.projectOnSpline(x0);
-    std::cout << "runMPC project on spline" << std::endl;
     xk = mpcc::constrainState(xk, track.path.getLength());
-    std::cout << "runMPC constraint state" << std::endl;
     if (valid_initial_guess) {
         updateInitialGuess(xk);
-        std::cout << "runMPC update initial guess" << std::endl;
     } else {
         generateInitialGuess(xk);
-        std::cout << "runMPC generate initial guess" << std::endl;
     }
 
     params.n_no_solves_sqp = 0;
     for (int i = 0; i < params.n_sqp; i++) {
         setProblem();
-        std::cout << "runMPC set problem " << i << std::endl;
         optimal_solution = solver.solveMPC(stages, x0, &solver_status);
-        std::cout << "runMPC solve problem " << i << std::endl;
         if (solver_status != 0)
             params.n_no_solves_sqp++;
         if (solver_status <= 1)

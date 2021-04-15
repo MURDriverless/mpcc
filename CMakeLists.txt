@@ -58,7 +58,10 @@ add_executable(mpcc
         mpc/mpc_params.h
         models/state.cpp
         solvers/hpipm_interface.cpp
-        solvers/hpipm_interface.h splines/track.cpp)
+        solvers/hpipm_interface.h
+        splines/track.cpp
+        plotter/plotter.cpp
+        plotter/plotter.h)
 
 # For matplotlib
 find_package(PythonLibs REQUIRED)

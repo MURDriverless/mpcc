@@ -24,14 +24,14 @@ public:
     Vector2d getDerivative(double s) const;
     Vector2d getSecondDerivative(double s) const;
     double projectOnSpline(const State &xk) const;
+    CubicSpline sx;
+    CubicSpline sy;
 private:
     // Function to calculate Pythagorean distance between successive data-points
     static VectorXd calcLineDistances(const VectorXd &x_data, const VectorXd &y_data);
     static VectorXd cumulativeSum(const VectorXd &xy_data);
     double constrainInput(double s) const;
     VectorXd s_vector;
-    CubicSpline sx;
-    CubicSpline sy;
     double max_dist_proj = 3.0;  // TODO: find out what 3.0 means
 };
 

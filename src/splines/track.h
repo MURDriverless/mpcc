@@ -21,6 +21,9 @@ struct Track {
 
 namespace mpcc {
     Track getTrack(const std::string &file_path);
+    Track plannerTrack(std::vector<double> x_outer, std::vector<double> y_outer, 
+                    std::vector<double> x_inner, std::vector<double> y_inner, 
+                    std::vector<double> x_centre, std::vector<double> y_centre);
 }
 
 #endif //MPCC_TRACK_H

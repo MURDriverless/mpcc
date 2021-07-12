@@ -15,8 +15,9 @@
 
 // General & MPCC includes
 #include <cmath>
-#include "../models/state.h"
-#include "../splines/track.h"
+#include "../config.h"
+#include "../types.h"
+#include "../Params/track.h"
 // #include <unsupported/Eigen/MatrixFunctions>
 // #include "../models/model_interface.h"
 // #include "../models/model_params.h"
@@ -47,7 +48,7 @@ class FastLapControlNode {
     // Determine if obtained map and whether controller is ready to run
     bool mapready;
     // bool pathready;
-    bool fastlapready;
+    // bool fastlapready;
 
     // Vehicle States From SLAM
     double x;
@@ -77,6 +78,8 @@ class FastLapControlNode {
     ros::Publisher transitionPublisher; // Publish so that slow lap can stop publishing actuation
 
     public:    
+    bool fastlapready; // Skip to fast lap
+    
     // Constructor
     FastLapControlNode();
 
@@ -93,11 +96,11 @@ class FastLapControlNode {
     bool getFastLapReady();
 
     // Function for Mapped Track generation
-    Track generateTrack();
+    mpcc::Track generateTrack();
 
     // Functions for vehicle state
-    State initialize();
-    State update(const State& x0);
+    mpcc::State initialize();
+    mpcc::State update(const mpcc::State& x0, const mpcc::Input& u0, double Ts);
 };
 
 // Returns 1 if positive, 0 if 0, -1 if negative

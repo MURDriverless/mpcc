@@ -1,5 +1,6 @@
 # IDE
 .idea/
+.vscode/
 
 # Catkin and CMake generated files
 atomic_configure/

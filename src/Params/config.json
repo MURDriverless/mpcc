@@ -1,0 +1,15 @@
+
+{
+  "n_sqp": 2,
+  "n_reset": 5,
+  "sqp_mixing" : 0.8,
+  "n_sim": 1000,
+  "Ts": 0.05,
+  "v0": 0.2,
+  
+  "model_path": "/workspace/src/simulation/alexmpcc/src/Params/model.json",
+  "cost_path": "/workspace/src/simulation/alexmpcc/src/Params/cost.json",
+  "bounds_path": "/workspace/src/simulation/alexmpcc/src/Params/bounds.json",
+  "track_path": "/workspace/track.json",
+  "normalization_path": "/workspace/src/simulation/alexmpcc/src/Params/normalization.json"
+}

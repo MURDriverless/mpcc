@@ -1,151 +1,181 @@
-#include <iostream>
-#include <string>
+// Copyright 2019 Alexander Liniger
 
-#include <External/Json/include/nlohmann/json.hpp>
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 
-#include "costs/cost_params.h"
-#include "models/model_params.h"
-#include "mpc/mpc_params.h"
+//     http://www.apache.org/licenses/LICENSE-2.0
 
-#include "models/dynamic_bicycle_model.h"
-#include "models/state.h"
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+///////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 
-#include "bounds/bounds_manager.h"
-#include "constraints/constraint_manager.h"
-#include "costs/cost_manager.h"
-#include "mpc/mpc.h"
+#include "Tests/spline_test.h"
+#include "Tests/model_integrator_test.h"
+#include "Tests/constratins_test.h"
+#include "Tests/cost_test.h"
 
-#include "splines/cubic_spline2d.h"
-#include "splines/track.h"
-
-#include "solvers/hpipm_interface.h"
+#include "MPC/mpc.h"
+#include "Model/integrator.h"
+#include "Params/track.h"
+#include "Plotting/plotting.h"
 
 #include "ros/ros.h" // Must include for all ROS C++
 #include "ROSnode/fastlapnode.h"
 
-using std::string;
+#include <nlohmann/json.hpp>
 using json = nlohmann::json;
-using std::cout;
-using std::endl;
+
+#include <stack>
+#include <ctime>
+#include <chrono>
+
+// Time testing
+std::stack<clock_t> tictoc_stack;
+
+void tic() {
+    tictoc_stack.push(clock());
+}
+
+void toc() {
+    std::cout << "Time elapsed: "
+              << ((double)(clock() - tictoc_stack.top())) / CLOCKS_PER_SEC
+              << std::endl;
+    tictoc_stack.pop();
+}
 
 int main(int argc, char **argv) {
     // Initialize ROS node
-    ros::init(argc, argv, "fast_lap_control");
+    ros::init(argc, argv, "alex_mpcc");
 
-    // Define params file paths
-    const string bounds_params_file = "/workspace/src/simulation/mpcc/src/params/bounds_params.json";
-    const string cost_params_file = "/workspace/src/simulation/mpcc/src/params/cost_params.json";
-    const string model_params_file = "/workspace/src/simulation/mpcc/src/params/model_params.json";
-    const string mpc_params_file = "/workspace/src/simulation/mpcc/src/params/mpc_params.json";
-    // const string track_file = "params/track.json";
+    using namespace mpcc;
+    std::ifstream iConfig("/workspace/src/simulation/alexmpcc/src/Params/config.json");
+    json jsonConfig;
+    iConfig >> jsonConfig;
 
-    // Create params objects
-    CostParams cost_params = CostParams(cost_params_file);
-    ModelParams model_params = ModelParams(model_params_file);
-    MPCParams mpc_params = MPCParams(mpc_params_file);
+    PathToJson json_paths {jsonConfig["model_path"],
+                           jsonConfig["cost_path"],
+                           jsonConfig["bounds_path"],
+                           jsonConfig["track_path"],
+                           jsonConfig["normalization_path"]};
 
-    // Create model
-    DynamicBicycleModel model = DynamicBicycleModel(model_params);
+    // std::cout << testSpline() << std::endl;
+    // std::cout << testArcLengthSpline(json_paths) << std::endl;
 
-    // Create managers
-    BoundsManager bounds = BoundsManager(bounds_params_file);
-    ConstraintManager constraints = ConstraintManager(model);
-    CostManager costs = CostManager(cost_params, model_params);
+    // std::cout << testIntegrator(json_paths) << std::endl;
+    // std::cout << testLinModel(json_paths) << std::endl;
 
-    // Create solver
-    HpipmInterface solver = HpipmInterface();
+    // std::cout << testAlphaConstraint(json_paths) << std::endl;
+    // std::cout << testTireForceConstraint(json_paths) << std::endl;
+    // std::cout << testTrackConstraint(json_paths) << std::endl;
 
-    // Logger object
-    std::list<OptSolution> log;
-    
-    // Create State object for SLAM update
-    State x0;
+    // std::cout << testCost(json_paths) << std::endl;
 
-    // Create empty MPC object
-    MPC mpc;
+    Integrator integrator = Integrator(jsonConfig["Ts"],json_paths);
+    Plotting plotter = Plotting(jsonConfig["Ts"],json_paths);
 
-    // Create empty Track
-    Track track;
+    Track track = Track(json_paths.track_path);
+    TrackPos track_xy = track.getTrack();
 
-    // // Construct initial state to test transition
-    // const Vector2d init_pos = track.path.getPosition(0);
-    // const double init_yaw = atan2(init_pos(1), init_pos(0));
-    // const double v0 = 5.0;
-    // State x0 = {
-    //     init_pos(0),
-    //     init_pos(1),
-    //     init_yaw,
-    //     v0,
-    //     0.0,  // vy
-    //     0.0,  // wz
-    //     0.0,  // s
-    //     0.0,  // accel_D
-    //     0.0,  // steering_angle
-    //     v0
-    // };
-
-    // Create Fast Lap Control Node
+    // Create ROS Node stuff
     FastLapControlNode controlNode = FastLapControlNode();
-
-    // Create first run variable
     bool firstRun = true;
 
     // ROS INFO
     ROS_INFO_STREAM("FAST LAP CONTROL STARTED.");
 
+    // Empty Objects
+    MPC mpc(jsonConfig["n_sqp"],jsonConfig["n_reset"],jsonConfig["sqp_mixing"],jsonConfig["Ts"],json_paths);
+    State x0;
+    std::list<MPCReturn> log;
+
+    // Set Ts
+    ros::Rate rate(5); // 1/Ts, Ts = 0.1
+
+    mpc.setTrack(track_xy.X,track_xy.Y); // TO REMOVE WHEN WITH SLOW LAP
+
+    int count = 0;
+
+    x0 = controlNode.initialize();
+
     while(ros::ok())
     {
+        if (count < 20)
+        {
+            count++;
+        }   
+        else if (count > 500)
+        {
+            controlNode.fastlapready = false; // If want start fast lap immediately
+            double mean_time = 0.0;
+            double max_time = 0.0;
+            for(MPCReturn log_i : log)
+            {
+                mean_time += log_i.time_total;
+                if(log_i.time_total > max_time)
+                    max_time = log_i.time_total;
+            }
+            // std::cout << "mean nmpc time " << mean_time/double(jsonConfig["n_sim"]) << std::endl;
+            std::cout << "mean nmpc time " << mean_time/count << std::endl;
+            std::cout << "max nmpc time " << max_time << std::endl;
+            plotter.plotSim(log,track_xy);
+            return 0;
+        }
+        else
+        {
+            count++;
+            controlNode.fastlapready = true; // If want start fast lap immediately
+        }
         // Update 
         ros::spinOnce();
+
+        // ROS_INFO("States:\nx:%lf\ny:%lf\nyaw:%lf\ns:%lf.", x0.X, x0.Y, x0.phi, x0.s);  
+                
+        // MPCReturn mpc_sol = mpc.runMPC(x0); // Updates s
+        // controlNode.publishActuation(mpc_sol.u0.dD, mpc_sol.u0.dDelta);
+        // log.push_back(mpc_sol);
+        // // x0 = integrator.simTimeStep(x0,mpc_sol.u0,jsonConfig["Ts"]); // Updates s and vs
+
+        // x0 = controlNode.update(x0, mpc_sol.u0, jsonConfig["Ts"]); // Update state with SLAM data 
 
         // Fast Lap Control is ready
         if (firstRun && controlNode.getFastLapReady())
         {
             // ROS INFO
-            ROS_INFO_STREAM("FAST LAP CONTROL IS READY TO GO.");
-            
-            // Create Track
-            track = controlNode.generateTrack();
+            // ROS_INFO_STREAM("FAST LAP CONTROL IS READY TO GO.");
+            mpc.setTrack(track_xy.X,track_xy.Y);
 
-            // Create MPC object
-            mpc = MPC(bounds, constraints, costs, model, mpc_params, track, solver);
-
-            // Initialize States from transition with SLAM
             x0 = controlNode.initialize();
-
-            firstRun = false; // Finish initialization
-
-            // Run MPCC
-            OptSolution mpc_sol = mpc.runMPC(x0);
-
-            // Publish commands
-            controlNode.publishActuation(mpc_sol.u0(IndexMap.d_accel_D), mpc_sol.u0(IndexMap.d_steering_angle));
-
-            // ROS INFO
-            ROS_INFO("PUBLISHING COMMANDS, ACCEL: %lf, STEER: %lf\n", mpc_sol.u0(IndexMap.d_accel_D), mpc_sol.u0(IndexMap.d_steering_angle));
-
-            // Update states
-            // x0 = model.predictRK4(x0, mpc_sol.u0, mpc_params.Ts); // Independent of SLAM
-            x0 = controlNode.update(x0); // Update state with SLAM data
+            ROS_INFO("Starting State:\nx:%lf\ny:%lf\nyaw:%lf\nvx:%lf\nvy:%lf\ns:%lf.", x0.X, x0.Y, x0.phi, x0.vx, x0.vy, x0.s); 
+            
+            MPCReturn mpc_sol = mpc.runMPC(x0); // Updates s
+            controlNode.publishActuation(mpc_sol.u0.dD, mpc_sol.u0.dDelta);
             log.push_back(mpc_sol);
+            x0 = integrator.simTimeStep(x0,mpc_sol.u0,jsonConfig["Ts"]); // Updates s and vs
+            // x0.s = s_state.s;
+            // x0 = controlNode.update(x0, mpc_sol.u0, jsonConfig["Ts"]); // Update state with SLAM data 
+            
+            firstRun = false;
         }
 
         else if (controlNode.getFastLapReady())
         {
-            ROS_INFO("States:\nx:%lf\ny:%lf\ns:%lf.", x0(IndexMap.X), x0(IndexMap.Y), x0(IndexMap.s));  
-                   
-            // Run MPCC
-            OptSolution mpc_sol = mpc.runMPC(x0);
-
-            // Publish commands
-            controlNode.publishActuation(mpc_sol.u0(IndexMap.d_accel_D), mpc_sol.u0(IndexMap.d_steering_angle));
-
-            // Update states
-            // x0 = model.predictRK4(x0, mpc_sol.u0, mpc_params.Ts); // Independent of SLAM
-            x0 = controlNode.update(x0); // Update state with SLAM data
+            ROS_INFO("States:\nx:%lf\ny:%lf\nyaw:%lf\ns:%lf.", x0.X, x0.Y, x0.phi, x0.s);  
+            tic();
+            MPCReturn mpc_sol = mpc.runMPC(x0); // Updates s
+            toc();
+            controlNode.publishActuation(mpc_sol.u0.dD, mpc_sol.u0.dDelta);
             log.push_back(mpc_sol);
 
-            ROS_INFO_STREAM("Track Length" << track.path.getLength());
+            x0 = integrator.simTimeStep(x0,mpc_sol.u0,jsonConfig["Ts"]); // Updates s and vs
+            // x0.s = s_state.s;
+            // x0 = controlNode.update(x0, mpc_sol.u0, jsonConfig["Ts"]); // Update state with SLAM data 
+
+            // ROS_INFO_STREAM("Track Length" << track.path.getLength());
 
             // Analyse execution time
             // double mean_time = 0.0;
@@ -163,7 +193,21 @@ int main(int argc, char **argv) {
 
             // TODO: Lap count
         }
+
+        // rate.sleep(); // Wait until Ts
     }
 
-    return 0;
+    // MPC mpc(jsonConfig["n_sqp"],jsonConfig["n_reset"],jsonConfig["sqp_mixing"],jsonConfig["Ts"],json_paths);
+    // mpc.setTrack(track_xy.X,track_xy.Y);
+    // const double phi_0 = std::atan2(track_xy.Y(1) - track_xy.Y(0),track_xy.X(1) - track_xy.X(0));
+    // State x0 = {track_xy.X(0),track_xy.Y(0),phi_0,jsonConfig["v0"],0,0,0,0.5,0,jsonConfig["v0"]};
+    // for(int i=0;i<jsonConfig["n_sim"];i++)
+    // {
+    //     MPCReturn mpc_sol = mpc.runMPC(x0);
+    //     x0 = integrator.simTimeStep(x0,mpc_sol.u0,jsonConfig["Ts"]);
+    //     log.push_back(mpc_sol);
+    // }
+    // plotter.plotRun(log,track_xy);
 }
+
+

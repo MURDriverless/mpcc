@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>mpcc</name>
+  <name>alexmpcc</name>
   <version>1.1.0</version>
-  <description>MPCC package for MUR Fast Lap</description>
+  <description>Alex Liniger MPCC package for MUR Fast Lap</description>
   <maintainer email="khengyu_061192@hotmail.com">Kheng Yu Yeoh</maintainer>
-  <license>MIT</license>
-  <author email="dwirya@student.unimelb.edu.au">Dennis Wirya</author>
-  <author email="khengyu_061192@hotmail.com">Kheng Yu Yeoh</author>
+  <license>Apache-2.0</license>
+  <author email="noemail@noemail.com">Alex Liniger</author> <!-- For Controller https://github.com/alexliniger/MPCC -->
+  <author email="khengyu_061192@hotmail.com">Kheng Yu Yeoh</author> <!-- For ROS related Implemenetation and specific tuning -->
 
   <buildtool_depend>catkin</buildtool_depend>
 

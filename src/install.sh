@@ -29,7 +29,7 @@ git clone "$repository_hpipm" "$localFolder_hpipm"
 repository_matplotlib="https://github.com/lava/matplotlib-cpp.git"
 localFolder_matplotlib="External/matplotlib"
 git clone "$repository_matplotlib" "$localFolder_matplotlib"
-## clone eigen
+## clone eigne
 repository_eigen="https://gitlab.com/libeigen/eigen.git"
 localFolder_eigen="External/Eigen"
 git clone "$repository_eigen" "$localFolder_eigen"

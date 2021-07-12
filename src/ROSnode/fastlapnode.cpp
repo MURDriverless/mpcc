@@ -15,6 +15,8 @@
  */
 
 #include "fastlapnode.h"
+#include <External/Json/include/nlohmann/json.hpp> // To write JSON track
+using json = nlohmann::json;
 
 // To write csv file of map
 #include <iostream>
@@ -38,6 +40,7 @@ FastLapControlNode::FastLapControlNode()
 // msg: nav_msgs/Odometry
 void FastLapControlNode::slamCallback(const nav_msgs::Odometry& msg)
 {
+    // this->yaw = atan2(msg.pose.pose.position.y - this->y, msg.pose.pose.position.x - this->x);
     this->x = msg.pose.pose.position.x;
     this->y = msg.pose.pose.position.y;
 
@@ -45,6 +48,8 @@ void FastLapControlNode::slamCallback(const nav_msgs::Odometry& msg)
     double q_y = msg.pose.pose.orientation.y;
     double q_z = msg.pose.pose.orientation.z;
     double q_w = msg.pose.pose.orientation.w;
+    
+    // this->yaw = 2.0 * std::asin(std::abs(q_z)) * sign(q_z) * sign(q_w);
     this->yaw = Quart2EulerYaw(q_x, q_y, q_z, q_w);
 
     this->vx = msg.twist.twist.linear.x;
@@ -147,94 +152,111 @@ bool FastLapControlNode::getFastLapReady(){
 
 // Track generation function, using obtained map inputs
 // returns: the mapped track of type Track
-Track FastLapControlNode::generateTrack() 
+mpcc::Track FastLapControlNode::generateTrack() 
 {
-    Track track = mpcc::plannerTrack(this->x_outer, this->y_outer, 
-                                    this->x_inner, this->y_inner, 
-                                    this->x_centre, this->y_centre);
+    // mpcc::Track track = mpcc::plannerTrack(this->x_outer, this->y_outer, 
+    //                                 this->x_inner, this->y_inner, 
+    //                                 this->x_centre, this->y_centre);
 
 
-    int o_count = 0;
-    int i_count = 0;
-    int c_count = 0;
-    ROS_INFO_STREAM("Track generated with these parameters");
-    ROS_INFO_STREAM("X_Outer: ");
-    for (auto i = this->x_outer.begin(); i != this->x_outer.end(); ++i)
-    {
-        std::cout << *i << ' ';
-        o_count++;
-    }
-    ROS_INFO_STREAM("Y_Outer: ");
-    for (auto i = this->y_outer.begin(); i != this->y_outer.end(); ++i)
-    {
-        std::cout << *i << ' ';
-    }
-    ROS_INFO_STREAM("X_Inner: ");
-    for (auto i = this->x_inner.begin(); i != this->x_inner.end(); ++i)
-    {
-        std::cout << *i << ' ';
-        i_count++;
-    }
-    ROS_INFO_STREAM("Y_Inner: ");
-    for (auto i = this->y_inner.begin(); i != this->y_inner.end(); ++i)
-    {
-        std::cout << *i << ' ';
-    }
-    ROS_INFO_STREAM("X_Centre: ");
-    for (auto i = this->x_centre.begin(); i != this->x_centre.end(); ++i)
-    {
-        std::cout << *i << ' ';
-        c_count++;
-    }
-    ROS_INFO_STREAM("Y_Centre: ");
-    for (auto i = this->y_centre.begin(); i != this->y_centre.end(); ++i)
-    {
-        std::cout << *i << ' ';
-        c_count++;
-    }
-    ROS_INFO_STREAM("\nOuter num: " << o_count << ". Inner num: " << i_count << ". Centre num: " << c_count); //25 30 118
+    // int o_count = 0;
+    // int i_count = 0;
+    // int c_count = 0;
+    // ROS_INFO_STREAM("Track generated with these parameters");
+    // ROS_INFO_STREAM("X_Outer: ");
+    // for (auto i = this->x_outer.begin(); i != this->x_outer.end(); ++i)
+    // {
+    //     std::cout << *i << ' ';
+    //     o_count++;
+    // }
+    // ROS_INFO_STREAM("Y_Outer: ");
+    // for (auto i = this->y_outer.begin(); i != this->y_outer.end(); ++i)
+    // {
+    //     std::cout << *i << ' ';
+    // }
+    // ROS_INFO_STREAM("X_Inner: ");
+    // for (auto i = this->x_inner.begin(); i != this->x_inner.end(); ++i)
+    // {
+    //     std::cout << *i << ' ';
+    //     i_count++;
+    // }
+    // ROS_INFO_STREAM("Y_Inner: ");
+    // for (auto i = this->y_inner.begin(); i != this->y_inner.end(); ++i)
+    // {
+    //     std::cout << *i << ' ';
+    // }
+    // ROS_INFO_STREAM("X_Centre: ");
+    // for (auto i = this->x_centre.begin(); i != this->x_centre.end(); ++i)
+    // {
+    //     std::cout << *i << ' ';
+    //     c_count++;
+    // }
+    // ROS_INFO_STREAM("Y_Centre: ");
+    // for (auto i = this->y_centre.begin(); i != this->y_centre.end(); ++i)
+    // {
+    //     std::cout << *i << ' ';
+    //     c_count++;
+    // }
+    // ROS_INFO_STREAM("\nOuter num: " << o_count << ". Inner num: " << i_count << ". Centre num: " << c_count); //25 30 118
 
-    std::ofstream trackfile;
-    trackfile.open("/workspace/track.csv");
-    trackfile << "x_o,y_o,x_i,y_i,x,y,left as outer and right as inner for now.\n";
-    for (int i = 0; i < c_count; i++)
-    {
-        if (i > o_count)
-        {
-            trackfile << "0,0,";
-        }
-        else
-        {
-            trackfile << this->x_outer[i] << "," << this->y_outer[i] << ",";
-        }
+    // // Write current track into csv
+    // std::ofstream trackfile;
+    // trackfile.open("/workspace/track.csv");
+    // trackfile << "x_o,y_o,x_i,y_i,x,y,left as outer and right as inner for now.\n";
+    // for (int i = 0; i < c_count; i++)
+    // {
+    //     if (i > o_count)
+    //     {
+    //         trackfile << "0,0,";
+    //     }
+    //     else
+    //     {
+    //         trackfile << this->x_outer[i] << "," << this->y_outer[i] << ",";
+    //     }
 
-        if (i > i_count)
-        {
-            trackfile << "0,0,";
-        }
-        else
-        {
-            trackfile << this->x_inner[i] << "," << this->y_inner[i] << ",";
-        }
+    //     if (i > i_count)
+    //     {
+    //         trackfile << "0,0,";
+    //     }
+    //     else
+    //     {
+    //         trackfile << this->x_inner[i] << "," << this->y_inner[i] << ",";
+    //     }
 
-        trackfile << this->x_centre[i] << "," << this->y_centre[i] << ",\n";
-    }
+    //     trackfile << this->x_centre[i] << "," << this->y_centre[i] << ",\n";
+    // }
     
-    trackfile.close();
+    // trackfile.close();
 
-    return track;
+    // // Write current track as json
+    // json json_track;
+    // json_track["X_o"] = x_outer;
+    // json_track["X_i"] = x_inner;
+    // json_track["Y_o"] = y_outer;
+    // json_track["Y_i"] = y_inner;
+    // json_track["X"] = x_centre;
+    // json_track["Y"] = y_centre;
+
+    // std::ofstream file("/workspace/track.json");
+    // file << json_track;
+
+    // return track;
 }
 
 
 // State initialization function
 // returns: initial state of vehicle after transition from slow lap
-State FastLapControlNode::initialize()
+mpcc::State FastLapControlNode::initialize()
 {
-    State x = {
-        this->x,
-        this->y,
-        this->yaw,
-        this->vx,
+    mpcc::State x = {
+        // this->x,
+        // this->y,
+        -13.00,
+        10.30,
+        0.0,
+        // this->yaw,
+        // this->vx,
+        0,
         this->vy,  
         this->wz,  
         0.0,  // s
@@ -249,19 +271,19 @@ State FastLapControlNode::initialize()
 // Update function
 // input: current vehicle state
 // returns: state with updated SLAM outputs
-State FastLapControlNode::update(const State& x0)
+mpcc::State FastLapControlNode::update(const mpcc::State& x0, const mpcc::Input& u0, double Ts)
 {
-    State x_new;
-    x_new(IndexMap.X) = this->x;
-    x_new(IndexMap.Y) = this->y;
-    x_new(IndexMap.yaw) = this->yaw;
-    x_new(IndexMap.vx) = this->vx;
-    x_new(IndexMap.vy) = this->vy;
-    x_new(IndexMap.wz) = this->wz;
-    x_new(IndexMap.s) = x0(IndexMap.s);
-    x_new(IndexMap.accel_D) = x0(IndexMap.accel_D);
-    x_new(IndexMap.steering_angle) = x0(IndexMap.steering_angle);
-    x_new(IndexMap.vs) = x0(IndexMap.vs);
+    mpcc::State x_new;
+    x_new.X = this->x;
+    x_new.Y = this->y;
+    x_new.phi = this->yaw;
+    x_new.vx = this->vx;
+    x_new.vy = this->vy;
+    x_new.r = this->wz;
+    x_new.s = x0.s;
+    x_new.D = x0.D + Ts * u0.dD;
+    x_new.delta = x0.delta + Ts * u0.dDelta;
+    x_new.vs = x0.vs + Ts * u0.dVs;
 
     return x_new;
 }
@@ -288,7 +310,7 @@ int sign(double x)
 // From https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
 double Quart2EulerYaw(double q_x, double q_y, double q_z, double q_w)
 {
-    double siny_cosp = 2 * (q_w * q_z + q_x * q_y);
-    double cosy_cosp = 1 - 2 * (q_y * q_y + q_z * q_z);
+    double siny_cosp = 2.0 * (q_w * q_z + q_x * q_y);
+    double cosy_cosp = 1.0 - (2.0 * (q_y * q_y + q_z * q_z));
     return std::atan2(siny_cosp, cosy_cosp);
 }

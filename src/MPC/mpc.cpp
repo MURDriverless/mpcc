@@ -47,11 +47,11 @@ void MPC::setMPCProblem()
 {
     for(int i=0;i<=N;i++)
     {
-        setStage(initial_guess_[i].xk,initial_guess_[i].uk,i);
+        setStage(initial_guess_[i].xk,initial_guess_[i].uk,initial_guess_[i+1].xk,i);
     }
 }
 
-void MPC::setStage(const State &xk, const Input &uk, const int time_step)
+void MPC::setStage(const State &xk, const Input &uk, const State &xk1, const int time_step)
 {
     stages_[time_step].nx = NX;
     stages_[time_step].nu = NU;
@@ -63,28 +63,32 @@ void MPC::setStage(const State &xk, const Input &uk, const int time_step)
     }
     else
     {
-        stages_[time_step].ng = NPC;
-        stages_[time_step].ns = NS;
+        stages_[time_step].ng = NPC; // Polytopic Constraints
+        stages_[time_step].ns = NS; // Slack Variables: tyre, track, alpha
     }
 
     State xk_nz = xk;
     xk_nz.vxNonZero(param_.vx_zero);
 
-    stages_[time_step].cost_mat = normalizeCost(cost_.getCost(track_,xk_nz,time_step));
-    stages_[time_step].lin_model = normalizeDynamics(model_.getLinModel(xk_nz,uk));
+    State xk1_nz = xk1;
+    xk1_nz.vxNonZero(param_.vx_zero);
+
+    // Get Cost, Dynamics and Constraint matrix for each horizon based on states and input of initial guesses
+    stages_[time_step].cost_mat = normalizeCost(cost_.getCost(track_,xk_nz,uk,time_step));
+    stages_[time_step].lin_model = normalizeDynamics(model_.getLinModel(xk_nz,uk,xk1_nz));
     stages_[time_step].constrains_mat = normalizeCon(constraints_.getConstraints(track_,xk_nz,uk));
 
-    stages_[time_step].l_bounds_x = normalization_param_.T_x_inv*bounds_.getBoundsLX();
-    stages_[time_step].u_bounds_x = normalization_param_.T_x_inv*bounds_.getBoundsUX();
-    stages_[time_step].l_bounds_u = normalization_param_.T_u_inv*bounds_.getBoundsLU();
-    stages_[time_step].u_bounds_u = normalization_param_.T_u_inv*bounds_.getBoundsUU();
+    stages_[time_step].l_bounds_x = normalization_param_.T_x_inv*bounds_.getBoundsLX(xk_nz);
+    stages_[time_step].u_bounds_x = normalization_param_.T_x_inv*bounds_.getBoundsUX(xk_nz);
+    stages_[time_step].l_bounds_u = normalization_param_.T_u_inv*bounds_.getBoundsLU(uk);
+    stages_[time_step].u_bounds_u = normalization_param_.T_u_inv*bounds_.getBoundsUU(uk);
     stages_[time_step].l_bounds_s = normalization_param_.T_s_inv*bounds_.getBoundsLS();
     stages_[time_step].u_bounds_s = normalization_param_.T_s_inv*bounds_.getBoundsUS();
 
     stages_[time_step].l_bounds_x(si_index.s) = normalization_param_.T_x_inv(si_index.s,si_index.s)*
-                                                (initial_guess_[time_step].xk.s - param_.s_trust_region);//*initial_guess_[time_step].xk.vs;
+                                                (-param_.s_trust_region);//*initial_guess_[time_step].xk.vs;
     stages_[time_step].u_bounds_x(si_index.s) = normalization_param_.T_x_inv(si_index.s,si_index.s)*
-                                                (initial_guess_[time_step].xk.s + param_.s_trust_region);//*initial_guess_[time_step].xk.vs;
+                                                (param_.s_trust_region);//*initial_guess_[time_step].xk.vs;
 
 }
 
@@ -131,17 +135,14 @@ std::array<OptVariables,N+1> MPC::deNormalizeSolution(const std::array<OptVariab
     return denormalized_solution;
 }
 
-// moves initial_guess[i] to initial_guess[i+1], now [N-1] = [N]
-// sets initial_guess[0].xk = x0, uk = 0
-// sets initial_guess[N-1].xk = [N-2].xk, uk = 0
-// sets initial_guess[N].xk = RK4([N-1].xk, uk = 0, Ts), uk = 0
+// Assumes vehicle is able to fully follow the predicted horizon, predict next time step only
 void MPC::updateInitialGuess(const State &x0)
 {
     for(int i=1;i<N;i++)
-        initial_guess_[i-1] = initial_guess_[i];
+        initial_guess_[i-1] = initial_guess_[i]; // shift predicted horizon to the right by 1
 
-    initial_guess_[0].xk = x0;
-    initial_guess_[0].uk.setZero();
+    initial_guess_[0].xk = x0; // update initial guess with current states
+    initial_guess_[0].uk.setZero(); 
 
     initial_guess_[N-1].xk = initial_guess_[N-2].xk;
     initial_guess_[N-1].uk.setZero();// = initial_guess_[N-2].uk;
@@ -149,7 +150,7 @@ void MPC::updateInitialGuess(const State &x0)
     initial_guess_[N].xk = integrator_.RK4(initial_guess_[N-1].xk,initial_guess_[N-1].uk,Ts_);
     initial_guess_[N].uk.setZero();
 
-    unwrapInitialGuess();
+    unwrapInitialGuess(); // fix issues with angle and s length
 }
 
 // alternatively OptVariables MPC::unwrapInitialGuess(const OptVariables &initial_guess)
@@ -177,17 +178,19 @@ void MPC::unwrapInitialGuess()
 
 void MPC::generateNewInitialGuess(const State &x0)
 {
-    initial_guess_[0].xk = x0;
-    initial_guess_[0].uk.setZero();
+    initial_guess_[0].xk = x0; // Set current state
+    initial_guess_[0].uk.setZero(); // Reset input
 
     for(int i = 1;i<=N;i++)
     {
         initial_guess_[i].xk.setZero();
         initial_guess_[i].uk.setZero();
 
-        initial_guess_[i].xk.s = initial_guess_[i-1].xk.s + Ts_*param_.initial_velocity;
+        initial_guess_[i].xk.s = initial_guess_[i-1].xk.s + Ts_*param_.initial_velocity; // Carry forward progress based on x0 and some slow velocity
+        // From s, get position and velocity
         Eigen::Vector2d track_pos_i = track_.getPostion(initial_guess_[i].xk.s);
         Eigen::Vector2d track_dpos_i = track_.getDerivative(initial_guess_[i].xk.s);
+        // Redefine the new states and regenerate initial guesses assuming slow velocity
         initial_guess_[i].xk.X = track_pos_i(0);
         initial_guess_[i].xk.Y = track_pos_i(1);
         initial_guess_[i].xk.phi = atan2(track_dpos_i(1),track_dpos_i(0));
@@ -207,9 +210,9 @@ std::array<OptVariables,N+1> MPC::sqpSolutionUpdate(const std::array<OptVariable
     InputVector updated_u_vec;
     for(int i = 0;i<=N;i++)
     {
-        updated_x_vec = sqp_mixing_*stateToVector(current_solution[i].xk)
+        updated_x_vec = sqp_mixing_*(stateToVector(current_solution[i].xk)+stateToVector(last_solution[i].xk))
                         +(1.0-sqp_mixing_)*stateToVector(last_solution[i].xk);
-        updated_u_vec = sqp_mixing_*inputToVector(current_solution[i].uk)
+        updated_u_vec = sqp_mixing_*(inputToVector(current_solution[i].uk) + inputToVector(last_solution[i].uk))
                         +(1.0-sqp_mixing_)*inputToVector(last_solution[i].uk);
 
         updated_solution[i].xk = vectorToState(updated_x_vec);
@@ -225,17 +228,18 @@ MPCReturn MPC::runMPC(State &x0)
     int solver_status = -1;
     x0.s = track_.porjectOnSpline(x0);
     x0.unwrap(track_.getLength());
-    if(valid_initial_guess_)
-        updateInitialGuess(x0);
-    else
+    if(valid_initial_guess_) // if had a valid guess on previous run
+        updateInitialGuess(x0); 
+    else // infeasible guess on last run, make new guesses
         generateNewInitialGuess(x0);
 
     //TODO: this is one approach to handle solver errors, works well in simulation
     n_no_solves_sqp_ = 0;
-    for(int i=0;i<n_sqp_;i++) // n_sqp => number of times to run prediciton horizon for feasibility
+    for(int i=0;i<n_sqp_;i++)
     {
         setMPCProblem();
-        State x0_normalized = vectorToState(normalization_param_.T_x_inv*stateToVector(x0));
+        // std::cout << stateToVector(x0)-1.0*stateToVector(x0) << "\nHuh what's going on\n";
+        State x0_normalized = vectorToState(normalization_param_.T_x_inv*(stateToVector(x0)-1.0*stateToVector(x0)));
         optimal_solution_ = solver_interface_->solveMPC(stages_,x0_normalized, &solver_status);
         optimal_solution_ = deNormalizeSolution(optimal_solution_);
         if(solver_status != 0)
@@ -248,10 +252,10 @@ MPCReturn MPC::runMPC(State &x0)
     if(n_no_solves_sqp_ >= max_error)
         n_non_solves_++;
     else
-        n_non_solves_ = 0; // Feasible solution found
+        n_non_solves_ = 0;
 
     if(n_non_solves_ >= n_reset_){
-        valid_initial_guess_ = false; // Reset initial guesses since its infeasible
+        valid_initial_guess_ = false;
     }
 
     auto t2 = std::chrono::high_resolution_clock::now();

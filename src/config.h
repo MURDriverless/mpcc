@@ -35,7 +35,7 @@ namespace mpcc{
 #define NPC 3 //number of polytopic constraints
 #define NS 3
 
-static constexpr int N = 50; // Prediction Horizon
+static constexpr int N = 40;
 static constexpr double INF = 1E5;
 static constexpr int N_SPLINE = 5000;
 

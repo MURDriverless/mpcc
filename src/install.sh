@@ -1,4 +1,3 @@
-#!/bin/sh
 ## Copyright 2019 Alexander Liniger
 
 ## Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,9 +13,9 @@
 ## limitations under the License.
 ###########################################################################
 ###########################################################################
-## Install dependencies
-set -e
+## install dependincies
 
+#!/bin/bash
 ## clone blasfeo
 repository_blasfeo="https://github.com/giaf/blasfeo.git"
 localFolder_blasfeo="External/blasfeo"

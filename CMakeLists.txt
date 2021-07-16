@@ -35,10 +35,6 @@ add_executable(alexmpcc
         src/Cost/cost.cpp
         src/Model/model.cpp
         src/Model/integrator.cpp
-        src/Tests/spline_test.cpp
-        src/Tests/cost_test.cpp
-        src/Tests/model_integrator_test.cpp
-        src/Tests/constratins_test.cpp
         src/MPC/mpc.cpp
         src/Params/track.cpp
         src/Params/track.h

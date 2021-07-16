@@ -33,6 +33,7 @@ State Integrator::RK4(const State &x, const Input &u,const double ts) const
     const StateVector x_vec = stateToVector(x);
     const InputVector u_vec = inputToVector(u);
     // evaluating the 4 points
+    // step size, h = ts
     const StateVector k1 = model_.getF(vectorToState(x_vec),u);
     const StateVector k2 = model_.getF(vectorToState(x_vec+ts/2.*k1),u);
     const StateVector k3 = model_.getF(vectorToState(x_vec+ts/2.*k2),u);

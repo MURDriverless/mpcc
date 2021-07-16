@@ -49,8 +49,8 @@ void FastLapControlNode::slamCallback(const nav_msgs::Odometry& msg)
     double q_z = msg.pose.pose.orientation.z;
     double q_w = msg.pose.pose.orientation.w;
     
-    // this->yaw = 2.0 * std::asin(std::abs(q_z)) * sign(q_z) * sign(q_w);
-    this->yaw = Quart2EulerYaw(q_x, q_y, q_z, q_w);
+    this->yaw = 2.0 * std::asin(std::abs(q_z)) * sign(q_z) * sign(q_w);
+    // this->yaw = Quart2EulerYaw(q_x, q_y, q_z, q_w);
 
     this->vx = msg.twist.twist.linear.x;
     this->vy = msg.twist.twist.linear.y;
@@ -58,8 +58,8 @@ void FastLapControlNode::slamCallback(const nav_msgs::Odometry& msg)
 }
 
 // Obtain track boundary from planner
-// topic: /mur/planner/map !!undecided
-// msg: mur_common/map_msg !!undecided
+// topic: /mur/planner/map
+// msg: mur_common/map_msg
 void FastLapControlNode::mapCallback(const mur_common::map_msg& msg)
 {
     if (msg.mapready && !this->mapready) // Only update once when mapping is done
@@ -74,10 +74,9 @@ void FastLapControlNode::mapCallback(const mur_common::map_msg& msg)
         this->y_outer = y_o;
         this->x_inner = x_i;
         this->y_inner = y_i;
-        // from path
         this->x_centre = x;
         this->y_centre = y;
-        // this->pathready = true;
+
         this->mapready = msg.mapready;
 
         if (this->mapready)
@@ -154,10 +153,9 @@ bool FastLapControlNode::getFastLapReady(){
 // returns: the mapped track of type Track
 mpcc::Track FastLapControlNode::generateTrack() 
 {
-    // mpcc::Track track = mpcc::plannerTrack(this->x_outer, this->y_outer, 
-    //                                 this->x_inner, this->y_inner, 
-    //                                 this->x_centre, this->y_centre);
-
+    mpcc::Track track = mpcc::Track(this->x_outer, this->y_outer, 
+                                    this->x_inner, this->y_inner, 
+                                    this->x_centre, this->y_centre);
 
     // int o_count = 0;
     // int i_count = 0;
@@ -240,7 +238,7 @@ mpcc::Track FastLapControlNode::generateTrack()
     // std::ofstream file("/workspace/track.json");
     // file << json_track;
 
-    // return track;
+    return track;
 }
 
 
@@ -251,18 +249,34 @@ mpcc::State FastLapControlNode::initialize()
     mpcc::State x = {
         // this->x,
         // this->y,
-        -13.00,
-        10.30,
-        0.0,
         // this->yaw,
-        // this->vx,
-        0,
-        this->vy,  
+        -13.00, // eufs starting at orange cone (x)
+        10.30, // eufs starting at orange cone (y)
+        0.00, // eufs starting at orange cone (yaw)
+        // -15.30, // eufs starting when map connected (x)
+        // 5.60, // eufs starting when map connected (y)
+        // 1.57, // eufs starting when map connected (yaw) 
+        // 0.0, // dennis track at top (x)
+        // 0.0, // dennis track at top (y)
+        // 0.0, // dennis track at top (yaw)
+        // 25.0, // dennis track difficult (x)
+        // -58.0, // dennis track difficult (y)
+        // -0.7, // dennis strack difficult (yaw)
+        // -10.30, // alex RC (x)
+        // 13.60, // alex RC (y)
+        // -0.70, // alex RC (yaw)
+        // -31.30, // alex full (x)
+        // -14.60, // alex full (y)
+        // -0.70, // alex full (yaw)
+        this->vx,
+        // 1.0, // slow lap end speed
+        this->vy,
         this->wz,  
         0.0,  // s
         this->accel_D,
         this->steering_angle,
-        this->vx
+        this->vx // vs
+        // 1.0, // slow lap end speed
     };
 
     return x;
@@ -280,10 +294,16 @@ mpcc::State FastLapControlNode::update(const mpcc::State& x0, const mpcc::Input&
     x_new.vx = this->vx;
     x_new.vy = this->vy;
     x_new.r = this->wz;
+    // Copy over from RK4
     x_new.s = x0.s;
-    x_new.D = x0.D + Ts * u0.dD;
-    x_new.delta = x0.delta + Ts * u0.dDelta;
-    x_new.vs = x0.vs + Ts * u0.dVs;
+    x_new.D = x0.D;
+    x_new.delta = x0.delta;
+    x_new.vs = x0.vs;
+    
+    // x_new.s = x0.s + Ts*x0.vs + Ts*Ts/2*u0.dVs; // RK4 update
+    // x_new.D = x0.D + Ts * u0.dD;
+    // x_new.delta = x0.delta + Ts * u0.dDelta; 
+    // x_new.vs = x0.vs + Ts * u0.dVs;
 
     return x_new;
 }

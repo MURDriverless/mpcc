@@ -49,10 +49,10 @@ TrackPoint Cost::getRefPoint(const ArcLengthSpline &track,const State &x) const
     // curvature
     double dtheta_ref_nom = (dx_ref*ddy_ref - dy_ref*ddx_ref);
     double dtheta_ref_denom = (dx_ref*dx_ref + dy_ref*dy_ref);
-    if(std::fabs(dtheta_ref_nom) < 1e-7)
-        dtheta_ref_nom = 0;
-    if(std::fabs(dtheta_ref_denom) < 1e-7)
-        dtheta_ref_denom = 1e-7;
+    // if(std::fabs(dtheta_ref_nom) < 1e-7)
+    //     dtheta_ref_nom = 0;
+    // if(std::fabs(dtheta_ref_denom) < 1e-7)
+    //     dtheta_ref_denom = 1e-7;
     double dtheta_ref = dtheta_ref_nom/dtheta_ref_denom;
 
     return {x_ref,y_ref,dx_ref,dy_ref,theta_ref,dtheta_ref};
@@ -147,8 +147,8 @@ CostMatrix Cost::getContouringCost(const ArcLengthSpline &track, const State &x,
     // contouring cost matrix
     Eigen::Vector2d ContouringCost;
     ContouringCost.setZero(2);
-    ContouringCost(0) = k < N ? cost_param_.q_c : cost_param_.q_c_N_mult * cost_param_.q_c; // Contouring Error, N_mult = terminal cost
-    ContouringCost(1) = cost_param_.q_l; // Lag Error
+    ContouringCost(0) = k < N ? cost_param_.q_c : cost_param_.q_c_N_mult * cost_param_.q_c;
+    ContouringCost(1) = cost_param_.q_l;
     // contouring and lag error part
     Q_MPC Q_contouring_cost = Q_MPC::Zero();
     q_MPC q_contouring_cost = q_MPC::Zero();
@@ -164,8 +164,8 @@ CostMatrix Cost::getContouringCost(const ArcLengthSpline &track, const State &x,
     Q_contouring_cost = ContouringCost(0)*d_contouring_error.transpose()*d_contouring_error +
                         ContouringCost(1)*d_lag_error.transpose()*d_lag_error;
     // regularization cost on yaw rate
-    Q_contouring_cost(si_index.r, si_index.r) = k < N ? cost_param_.q_r : cost_param_.q_r_N_mult * cost_param_.q_r; // Yaw rate, N_mult = terminal cost
-    Q_contouring_cost = 2.0*Q_contouring_cost;  
+    Q_contouring_cost(si_index.r, si_index.r) = k < N ? cost_param_.q_r : cost_param_.q_r_N_mult * cost_param_.q_r;
+    Q_contouring_cost = 2.0*Q_contouring_cost;
 
     q_contouring_cost = ContouringCost(0)*2.0*contouring_error_zero*d_contouring_error.transpose() +
                         ContouringCost(1)*2.0*lag_error_zero*d_lag_error.transpose();
@@ -237,7 +237,7 @@ CostMatrix Cost::getSoftConstraintCost() const
     return {Q_MPC::Zero(),R_MPC::Zero(),S_MPC::Zero(),q_MPC::Zero(),r_MPC::Zero(),Z_cost,z_cost};
 }
 
-CostMatrix Cost::getCost(const ArcLengthSpline &track, const State &x,const int k) const
+CostMatrix Cost::getCost(const ArcLengthSpline &track, const State &x, const Input &u,const int k) const
 {
     // generate quadratic cost function
     const CostMatrix contouring_cost = getContouringCost(track,x,k);
@@ -253,11 +253,17 @@ CostMatrix Cost::getCost(const ArcLengthSpline &track, const State &x,const int 
     Q_MPC Q_not_sym = contouring_cost.Q + heading_cost.Q + input_cost.Q + beta_cost.Q;
     Q_MPC Q_reg = 1e-9*Q_MPC::Identity();
 
-    const Q_MPC Q = 0.5*(Q_not_sym.transpose()+Q_not_sym);// + Q_reg;//contouring_cost.Q + input_cost.Q + beta_cost.Q;
-    const R_MPC R = contouring_cost.R + heading_cost.R + input_cost.R + beta_cost.R;
-    const q_MPC q = contouring_cost.q + heading_cost.q + input_cost.q + beta_cost.q;
-    const r_MPC r = contouring_cost.r + heading_cost.r + input_cost.r + beta_cost.r;
-    const Z_MPC Z = soft_con_cost.Z;
+    Q_MPC Q_full = 0.5*(Q_not_sym.transpose()+Q_not_sym);
+    R_MPC R_full = contouring_cost.R + heading_cost.R + input_cost.R + beta_cost.R;
+    q_MPC q_full = contouring_cost.q + heading_cost.q + input_cost.q + beta_cost.q;
+    r_MPC r_full = contouring_cost.r + heading_cost.r + input_cost.r + beta_cost.r;
+
+    //TODO do this properly directly in the differnet functions computing the cost
+    const Q_MPC Q = Q_full;
+    const R_MPC R = R_full;
+    const q_MPC q = q_full + (stateToVector(x).adjoint()*Q_full).adjoint(); 
+    const r_MPC r = r_full + (inputToVector(u).adjoint()*R_full).adjoint();
+    const Z_MPC Z = 2.0*soft_con_cost.Z;
     const z_MPC z = soft_con_cost.z;
 
 

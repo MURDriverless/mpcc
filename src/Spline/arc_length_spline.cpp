@@ -259,7 +259,6 @@ Eigen::Vector2d ArcLengthSpline::getSecondDerivative(const double s) const
     return dds_path;
 }
 
-// Return full length of track (total arc length of spline)
 double ArcLengthSpline::getLength() const
 {
     return path_data_.s(path_data_.n_points-1);
@@ -270,15 +269,15 @@ double ArcLengthSpline::porjectOnSpline(const State &x) const
     Eigen::Vector2d pos;
     pos(0) = x.X;
     pos(1) = x.Y;
-    double s_guess = x.s; // 
-    Eigen::Vector2d pos_path = getPostion(s_guess); // get 
+    double s_guess = x.s;
+    Eigen::Vector2d pos_path = getPostion(s_guess);
 
     double s_opt = s_guess;
     double dist = (pos-pos_path).norm();
 
     if (dist >= param_.max_dist_proj)
     {
-        std::cout << "dist too large, projected dist = "  << dist << std::endl;
+        std::cout << "dist too large" << std::endl;
         Eigen::ArrayXd diff_x_all = path_data_.X.array() - pos(0);
         Eigen::ArrayXd diff_y_all = path_data_.Y.array() - pos(1);
         Eigen::ArrayXd dist_square = diff_x_all.square() + diff_y_all.square();

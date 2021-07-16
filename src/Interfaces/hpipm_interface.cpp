@@ -254,11 +254,11 @@ std::array<OptVariables,N+1> HpipmInterface::Solve(int *status)
 //    enum hpipm_mode mode = SPEED_ABS;
     enum hpipm_mode mode = SPEED;
 //    enum hpipm_mode mode = BALANCE;
-//    enum hpipm_mode mode = ROBUST;
+    // enum hpipm_mode mode = ROBUST;
 
 //    int mode = 1;
     double mu0 = 1e2;
-    int iter_max = 30;
+    int iter_max = 30; // max iteration
     double tol_stat = 1e-6;
     double tol_eq = 1e-6;
     double tol_ineq = 1e-6;
@@ -284,7 +284,7 @@ std::array<OptVariables,N+1> HpipmInterface::Solve(int *status)
     // ipm
 
     int ipm_size = d_ocp_qp_ipm_ws_memsize(&dim, &arg);
-    // printf("\nipm size = %d\n", ipm_size);
+//    printf("\nipm size = %d\n", ipm_size);
     void *ipm_mem = malloc(ipm_size);
 
     struct d_ocp_qp_ipm_ws workspace;

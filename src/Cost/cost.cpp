@@ -49,7 +49,7 @@ TrackPoint Cost::getRefPoint(const ArcLengthSpline &track,const State &x) const
     // curvature
     double dtheta_ref_nom = (dx_ref*ddy_ref - dy_ref*ddx_ref);
     double dtheta_ref_denom = (dx_ref*dx_ref + dy_ref*dy_ref);
-    // if(std::fabs(dtheta_ref_nom) < 1e-7)
+    // if(std::fabs(dtheta_ref_nom) < 1e-7) // not commented out in main
     //     dtheta_ref_nom = 0;
     // if(std::fabs(dtheta_ref_denom) < 1e-7)
     //     dtheta_ref_denom = 1e-7;
@@ -147,8 +147,8 @@ CostMatrix Cost::getContouringCost(const ArcLengthSpline &track, const State &x,
     // contouring cost matrix
     Eigen::Vector2d ContouringCost;
     ContouringCost.setZero(2);
-    ContouringCost(0) = k < N ? cost_param_.q_c : cost_param_.q_c_N_mult * cost_param_.q_c;
-    ContouringCost(1) = cost_param_.q_l;
+    ContouringCost(0) = k < N ? cost_param_.q_c : cost_param_.q_c_N_mult * cost_param_.q_c; // Contourirng Cost
+    ContouringCost(1) = cost_param_.q_l; // Lag Cost
     // contouring and lag error part
     Q_MPC Q_contouring_cost = Q_MPC::Zero();
     q_MPC q_contouring_cost = q_MPC::Zero();
@@ -170,7 +170,7 @@ CostMatrix Cost::getContouringCost(const ArcLengthSpline &track, const State &x,
     q_contouring_cost = ContouringCost(0)*2.0*contouring_error_zero*d_contouring_error.transpose() +
                         ContouringCost(1)*2.0*lag_error_zero*d_lag_error.transpose();
     // progress maximization part
-    q_contouring_cost(si_index.vs) = -cost_param_.q_vs;
+    q_contouring_cost(si_index.vs) = -cost_param_.q_vs; // Progress Maximization    
 
     // solver interface expects 0.5 x^T Q x + q^T x
     return {Q_contouring_cost,R_MPC::Zero(),S_MPC::Zero(),q_contouring_cost,r_MPC::Zero(),Z_MPC::Zero(),z_MPC::Zero()};
@@ -261,9 +261,9 @@ CostMatrix Cost::getCost(const ArcLengthSpline &track, const State &x, const Inp
     //TODO do this properly directly in the differnet functions computing the cost
     const Q_MPC Q = Q_full;
     const R_MPC R = R_full;
-    const q_MPC q = q_full + (stateToVector(x).adjoint()*Q_full).adjoint(); 
-    const r_MPC r = r_full + (inputToVector(u).adjoint()*R_full).adjoint();
-    const Z_MPC Z = 2.0*soft_con_cost.Z;
+    const q_MPC q = q_full + (stateToVector(x).adjoint()*Q_full).adjoint(); // changes from main
+    const r_MPC r = r_full + (inputToVector(u).adjoint()*R_full).adjoint(); // changes from main
+    const Z_MPC Z = 2.0*soft_con_cost.Z; // changes from main
     const z_MPC z = soft_con_cost.z;
 
 

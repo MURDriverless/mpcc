@@ -85,6 +85,7 @@ void MPC::setStage(const State &xk, const Input &uk, const State &xk1, const int
     stages_[time_step].l_bounds_s = normalization_param_.T_s_inv*bounds_.getBoundsLS();
     stages_[time_step].u_bounds_s = normalization_param_.T_s_inv*bounds_.getBoundsUS();
 
+    // slight formula difference from main
     stages_[time_step].l_bounds_x(si_index.s) = normalization_param_.T_x_inv(si_index.s,si_index.s)*
                                                 (-param_.s_trust_region);//*initial_guess_[time_step].xk.vs;
     stages_[time_step].u_bounds_x(si_index.s) = normalization_param_.T_x_inv(si_index.s,si_index.s)*
@@ -210,6 +211,7 @@ std::array<OptVariables,N+1> MPC::sqpSolutionUpdate(const std::array<OptVariable
     InputVector updated_u_vec;
     for(int i = 0;i<=N;i++)
     {
+        // different from main
         updated_x_vec = sqp_mixing_*(stateToVector(current_solution[i].xk)+stateToVector(last_solution[i].xk))
                         +(1.0-sqp_mixing_)*stateToVector(last_solution[i].xk);
         updated_u_vec = sqp_mixing_*(inputToVector(current_solution[i].uk) + inputToVector(last_solution[i].uk))
@@ -249,13 +251,13 @@ MPCReturn MPC::runMPC(State &x0)
     }
 
     const int max_error = std::max(n_sqp_-1,1);
-    if(n_no_solves_sqp_ >= max_error)
+    if(n_no_solves_sqp_ >= max_error) // unable to solve consecutively
         n_non_solves_++;
     else
-        n_non_solves_ = 0;
+        n_non_solves_ = 0; // able to solve
 
     if(n_non_solves_ >= n_reset_){
-        valid_initial_guess_ = false;
+        valid_initial_guess_ = false; // reset states to regenerate new guesses
     }
 
     auto t2 = std::chrono::high_resolution_clock::now();

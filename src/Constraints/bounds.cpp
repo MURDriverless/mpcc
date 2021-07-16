@@ -59,6 +59,7 @@ Bounds::Bounds(BoundsParam bounds_param)
     std::cout << "bounds initialized" << std::endl;
 }
 
+// Added minus term all over here compared to main
 Bounds_x Bounds::getBoundsLX(const State &x) const
 {
     return  l_bounds_x_-stateToVector(x);

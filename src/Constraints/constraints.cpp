@@ -183,6 +183,7 @@ ConstrainsMatrix Constraints::getConstraints(const ArcLengthSpline &track,const 
     du_constrains_matrix(si_index.con_alpha) = alpha_constraints_front.du_i;
 
     // TODO consider the zero order term directly in the functions construdcing the constraints
+    // Missing from main branch
     dl_constrains_matrix = dl_constrains_matrix -  C_constrains_matrix*stateToVector(x);   
     du_constrains_matrix = du_constrains_matrix -  C_constrains_matrix*stateToVector(x);   
 

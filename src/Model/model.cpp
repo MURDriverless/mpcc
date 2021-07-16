@@ -296,7 +296,8 @@ LinModelMatrix Model::discretizeModel(const LinModelMatrix &lin_model_c, const S
     const A_MPC A_d = temp_res.block<NX,NX>(0,0);
     const B_MPC B_d = temp_res.block<NX,NU>(0,NX);
 
-    // TODO: use correct RK4 instead of inline RK4
+    // TODO: use correct RK4 instead of inline RK4,
+    // main uses expm but here use RK4
     const StateVector x_vec = stateToVector(x);
 
     const StateVector k1 = getF(vectorToState(x_vec),u);

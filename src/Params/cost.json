@@ -1,12 +1,11 @@
-
 {
-  "qC" : 1E-3,
+  "qC" : 0.01,
   "qL" : 1000.0,
-  "qVs" : 15,
+  "qVs" : 0.5,
 
-  "qMu": 1E0,
+  "qMu": 1E-1,
 
-  "qR" : 1E-2,
+  "qR" : 1E-1,
 
   "qBeta" : 5E0,
   "betaKin": 1,
@@ -16,18 +15,18 @@
   "rVs" : 1E-5,
 
   "rdD" : 1E-1,
-  "rdDelta" : 5E2,
+  "rdDelta" : 5E0,
   "rdVs" : 1E-4,
 
-  "qCNmult": 1E4,
+  "qCNmult": 1E3,
   "qRNmult": 30.0,
 
-  "sc_quad_track": 100.0,
-  "sc_quad_tire": 100.0,
-  "sc_quad_alpha": 100.0, 
+  "sc_quad_track": 10000.0,
+  "sc_quad_tire": 10000.0,
+  "sc_quad_alpha": 10000.0, 
 
-  "sc_lin_track": 10.0,
-  "sc_lin_tire": 10.0,
-  "sc_lin_alpha": 10.0
+  "sc_lin_track": 100.0,
+  "sc_lin_tire": 100.0,
+  "sc_lin_alpha": 100.0
 }
   

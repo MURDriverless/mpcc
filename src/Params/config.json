@@ -2,10 +2,11 @@
 {
   "n_sqp": 2,
   "n_reset": 2,
-  "sqp_mixing" : 0.9,
-  "n_sim": 810,
+  "sqp_mixing" : 0.8,
+  "n_sim": 5000,
   "Ts": 0.1,
-  "v0": 5.0,
+  "Hz": 10,
+  "v0": 1.0,
   
   "model_path": "/workspace/src/simulation/alexmpcc/src/Params/model.json",
   "cost_path": "/workspace/src/simulation/alexmpcc/src/Params/cost.json",

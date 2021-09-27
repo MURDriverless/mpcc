@@ -245,7 +245,7 @@ std::array<OptVariables,N+1> HpipmInterface::Solve(int *status)
     // ipm arg
 
     int ipm_arg_size = d_ocp_qp_ipm_arg_memsize(&dim);
-    printf("\nipm arg size = %d\n", ipm_arg_size);
+    // printf("\nipm arg size = %d\n", ipm_arg_size);
     void *ipm_arg_mem = malloc(ipm_arg_size);
 
     struct d_ocp_qp_ipm_arg arg;
@@ -300,9 +300,9 @@ std::array<OptVariables,N+1> HpipmInterface::Solve(int *status)
     gettimeofday(&tv1, nullptr); // stop
     double time_ocp_ipm = (tv1.tv_usec-tv0.tv_usec)/(1e6);
 
-    printf("comp time = %f\n", time_ocp_ipm);
-    printf("exitflag %d\n", hpipm_return);
-    printf("ipm iter = %d\n", workspace.iter);
+    // printf("comp time = %f\n", time_ocp_ipm);
+    // printf("exitflag %d\n", hpipm_return);
+    // printf("ipm iter = %d\n", workspace.iter);
 
     // extract and print solution
     int ii;

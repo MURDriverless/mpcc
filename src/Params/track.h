@@ -41,6 +41,7 @@ struct TrackPos {
 
 class Track {
 public:
+    Track();
     Track(std::string file);
     Track(std::vector<double> x_outer, std::vector<double> y_outer, 
             std::vector<double> x_inner, std::vector<double> y_inner, 

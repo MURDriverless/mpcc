@@ -45,6 +45,20 @@ struct State{
         vs = 0.0;
     }
 
+    void set(double X, double Y, double phi, double vx, double vy, double r, double s, double D, double delta, double vss)
+    {
+        this->X = X;
+        this->Y = Y;
+        this->phi = phi;
+        this->vx = vx;
+        this->vy = vy;
+        this->r = r;
+        this->s = s;
+        this->D = D;
+        this->delta = delta;
+        this->vs = vs;
+    }
+
     // Fix angle and s length issues
     void unwrap(double track_length)
     {

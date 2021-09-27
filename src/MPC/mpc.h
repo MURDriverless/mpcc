@@ -74,9 +74,9 @@ struct MPCReturn {
 
 class MPC {
 public:
-    MPCReturn runMPC(State &x0);
+    MPCReturn runMPC(State &x0, Eigen::Vector2d &error_count);
 
-    void setTrack(const Eigen::VectorXd &X, const Eigen::VectorXd &Y);
+    ArcLengthSpline setTrack(const Eigen::VectorXd &X, const Eigen::VectorXd &Y);
 
     MPC();
     MPC(int n_sqp, int n_reset, double sqp_mixing, double Ts,const PathToJson &path);

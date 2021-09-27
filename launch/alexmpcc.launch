@@ -1,9 +1,13 @@
 <?xml version="1.0"?>
 <launch>
-    <node pkg="alexmpcc" type="alexmpcc" name="alexmpcc" output="screen"/>
-    <!-- <param name="constant_v" value="false"/>
-    <param name="v_max" value="15.0"/>
-    <param name="v_const" value="1.0"/>
-    <param name="max_f_gain" value="3.0"/> -->
-</launch>
+    <!--################ Args #################-->
+    <arg name="node_start_delay" default="1.0"/>
+    <arg name="comm" default="0"/> <!-- Want to communicate with SLAM and stuff -->
+    <arg name="skip" default="1"/> <!-- Skip to Fast lap directly -->
+    
+    <!--################ Package #################-->
+    <node pkg="alexmpcc" type="alexmpcc" name="alexmpcc" output="screen" 
+        launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' " 
+        args="$(arg comm) $(arg skip)"/>    
 
+</launch>

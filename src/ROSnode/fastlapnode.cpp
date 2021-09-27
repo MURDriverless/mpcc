@@ -23,7 +23,8 @@ using json = nlohmann::json;
 #include <fstream>
 
 // Constructor
-FastLapControlNode::FastLapControlNode()
+FastLapControlNode::FastLapControlNode(const mpcc::PathToJson &path)
+:param_(mpcc::Param(path.param_path))
 {
     this->mapready = false;
     this->fastlapready = false;
@@ -33,6 +34,7 @@ FastLapControlNode::FastLapControlNode()
     this->finalActuationSubscriber = nh.subscribe(ACTUATION_TOPIC, 1, &FastLapControlNode::finalActuationCallback, this);
     this->actuationPublisher = nh.advertise<mur_common::actuation_msg>(ACTUATION_TOPIC, 1);
     this->transitionPublisher = nh.advertise<mur_common::transition_msg>(TRANSITION_TOPIC, 1);
+    this->RVIZPublisher = nh.advertise<visualization_msgs::Marker>(RVIZ_TOPIC, 10);
 }
 
 // Obtain vehicle states from SLAM
@@ -86,19 +88,6 @@ void FastLapControlNode::mapCallback(const mur_common::map_msg& msg)
     }
 }
 
-// // Obtain centerline from planner
-// // topic: /mur/planner/path
-// // msg: mur_common/path_msg 
-// void FastLapControlNode::pathCallback(const mur_common::path_msg::ConstPtr& msg)
-// {
-//     if (this->mapready && !this->pathready) // Only update once when mapping is done and path not ready
-//     {
-//         this->x_centre = msg.x;
-//         this->y_centre = msg.y;
-//         this->pathready = true;
-//     }
-// }
-
 // Obtain final actuation output from slow lap, so it can transition smoothly
 // Also publishes fastlapready, so slow lap follower can stop publishing actuation_msg
 // topic: /mur/control/actuation
@@ -137,8 +126,7 @@ void FastLapControlNode::publishActuation(double accel_D, double steering_angle)
     act_msg.acceleration_threshold = accel_D;
     act_msg.steering = steering_angle;
     
-    // ROS INFO
-    ROS_INFO("PUBLISHING COMMANDS, ACCEL: %lf, STEER: %lf\n", accel_D, steering_angle);
+    // ROS_INFO("PUBLISHING COMMANDS, ACCEL: %lf, STEER: %lf\n", accel_D, steering_angle);
     
     // Publish msg
     actuationPublisher.publish(act_msg);
@@ -247,12 +235,12 @@ mpcc::Track FastLapControlNode::generateTrack()
 mpcc::State FastLapControlNode::initialize()
 {
     mpcc::State x = {
-        // this->x,
-        // this->y,
-        // this->yaw,
-        -13.00, // eufs starting at orange cone (x)
-        10.30, // eufs starting at orange cone (y)
-        0.00, // eufs starting at orange cone (yaw)
+        this->x,
+        this->y,
+        this->yaw,
+        // -13.00, // eufs starting at orange cone (x)
+        // 10.30, // eufs starting at orange cone (y)
+        // 0.00, // eufs starting at orange cone (yaw)
         // -15.30, // eufs starting when map connected (x)
         // 5.60, // eufs starting when map connected (y)
         // 1.57, // eufs starting when map connected (yaw) 
@@ -296,8 +284,10 @@ mpcc::State FastLapControlNode::update(const mpcc::State& x0, const mpcc::Input&
     x_new.r = this->wz;
     // Copy over from RK4
     x_new.s = x0.s;
-    x_new.D = x0.D;
-    x_new.delta = x0.delta;
+    x_new.D = this->accel_D;
+    x_new.delta = this->steering_angle;
+    // x_new.D = x0.D;
+    // x_new.delta = x0.delta;
     x_new.vs = x0.vs;
     
     // x_new.s = x0.s + Ts*x0.vs + Ts*Ts/2*u0.dVs; // RK4 update
@@ -333,4 +323,76 @@ double Quart2EulerYaw(double q_x, double q_y, double q_z, double q_w)
     double siny_cosp = 2.0 * (q_w * q_z + q_x * q_y);
     double cosy_cosp = 1.0 - (2.0 * (q_y * q_y + q_z * q_z));
     return std::atan2(siny_cosp, cosy_cosp);
+}
+
+// Publish predicted path and track boundary to RVIZ
+void FastLapControlNode::publishRVIZ(const std::array<mpcc::OptVariables,mpcc::N+1> mpc_horizon, const mpcc::ArcLengthSpline &track)
+{
+    // Initialize RVIZ Line Strip msg 
+    ros::Time current_time = ros::Time::now();
+    visualization_msgs::Marker inner_boundary, outer_boundary, predict_path;
+    inner_boundary.header.frame_id = outer_boundary.header.frame_id = predict_path.header.frame_id = RVIZ_FRAME;
+    
+    // For Inner/Outer Boundary
+    // inner_boundary.header.frame_id = outer_boundary.header.frame_id = "mpcc_boundary";
+    inner_boundary.header.stamp = outer_boundary.header.stamp = ros::Time::now();
+    inner_boundary.ns = "mpcc_inner_boundary";
+    outer_boundary.ns = "mpcc_outer_boundary";
+    inner_boundary.action = outer_boundary.action = visualization_msgs::Marker::ADD;
+    inner_boundary.type = outer_boundary.type = visualization_msgs::Marker::LINE_STRIP;
+    inner_boundary.scale.x = outer_boundary.scale.x = 0.1;
+    // Boundary is red
+    inner_boundary.color.r = outer_boundary.color.r = 1.0;
+    inner_boundary.color.a = outer_boundary.color.a = 1.0;
+
+    // For Predicted Path
+    // predict_path.header.frame_id = "mpcc_prediction";
+    predict_path.header.stamp = ros::Time::now();
+    predict_path.ns = "mpcc_prediction_horizon";
+    predict_path.action = visualization_msgs::Marker::ADD;
+    predict_path.type = visualization_msgs::Marker::LINE_STRIP;
+    predict_path.scale.x = 0.2;
+    // Predicted Path is blue
+    predict_path.color.b = 1.0;
+    predict_path.color.a = 1.0;
+
+    // Get boundary of horizons
+    for(int i=0;i<mpc_horizon.size();i++)
+    {
+        // given arc length s and the track -> compute linearized track constraints
+        double s = mpc_horizon[i].xk.s;
+
+        // X-Y point of the center line
+        Eigen::Vector2d pos_center = track.getPostion(s);
+        Eigen::Vector2d d_center   = track.getDerivative(s);
+        // Tangent of center line at s
+        Eigen::Vector2d tan_center = {-d_center(1),d_center(0)};
+
+        // inner and outer track boundary given left and right width of track
+        Eigen::Vector2d pos_outer = pos_center + param_.r_out*tan_center;
+        Eigen::Vector2d pos_inner = pos_center - param_.r_in*tan_center;
+
+        // Initialize msgs
+        geometry_msgs::Point p;
+        p.z = 0.2; 
+
+        // inner
+        p.x = pos_inner(0);
+        p.y = pos_inner(1);
+        inner_boundary.points.push_back(p);
+
+        // outer
+        p.x = pos_outer(0);
+        p.y = pos_outer(1);
+        outer_boundary.points.push_back(p);
+    
+        // prediction
+        p.x = mpc_horizon[i].xk.X;
+        p.y = mpc_horizon[i].xk.Y;
+        predict_path.points.push_back(p);
+    }
+
+    RVIZPublisher.publish(predict_path);
+    RVIZPublisher.publish(inner_boundary);
+    RVIZPublisher.publish(outer_boundary);
 }

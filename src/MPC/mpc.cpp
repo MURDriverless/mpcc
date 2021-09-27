@@ -141,13 +141,20 @@ void MPC::updateInitialGuess(const State &x0)
 {
     for(int i=1;i<N;i++)
         initial_guess_[i-1] = initial_guess_[i]; // shift predicted horizon to the right by 1
+    // new -> prev
+    // 0 -> 1
+    // N-2 -> N-1
+    // N-1 -> N
+    // N == N
 
-    initial_guess_[0].xk = x0; // update initial guess with current states
+    initial_guess_[0].xk = x0; // update first guess with current states
     initial_guess_[0].uk.setZero(); 
 
+    // Warm start SQP
     initial_guess_[N-1].xk = initial_guess_[N-2].xk;
     initial_guess_[N-1].uk.setZero();// = initial_guess_[N-2].uk;
 
+    // Estimate new horizon state using RK4
     initial_guess_[N].xk = integrator_.RK4(initial_guess_[N-1].xk,initial_guess_[N-1].uk,Ts_);
     initial_guess_[N].uk.setZero();
 
@@ -177,6 +184,7 @@ void MPC::unwrapInitialGuess()
 
 }
 
+// Generate initial guess from reference path
 void MPC::generateNewInitialGuess(const State &x0)
 {
     initial_guess_[0].xk = x0; // Set current state
@@ -202,6 +210,8 @@ void MPC::generateNewInitialGuess(const State &x0)
     valid_initial_guess_ = true;
 }
 
+// Updates initial guess with optimal solution
+// sqp_mixing = alpha for Newton Step
 std::array<OptVariables,N+1> MPC::sqpSolutionUpdate(const std::array<OptVariables,N+1> &last_solution,
                                                     const std::array<OptVariables,N+1> &current_solution)
 {
@@ -224,13 +234,13 @@ std::array<OptVariables,N+1> MPC::sqpSolutionUpdate(const std::array<OptVariable
     return updated_solution;
 }
 
-MPCReturn MPC::runMPC(State &x0)
+MPCReturn MPC::runMPC(State &x0, Eigen::Vector2d &error_count)
 {
     auto t1 = std::chrono::high_resolution_clock::now();
     int solver_status = -1;
     x0.s = track_.porjectOnSpline(x0);
     x0.unwrap(track_.getLength());
-    if(valid_initial_guess_) // if had a valid guess on previous run
+    if(valid_initial_guess_) // if had a valid solutiton guess on previous run
         updateInitialGuess(x0); 
     else // infeasible guess on last run, make new guesses
         generateNewInitialGuess(x0);
@@ -245,7 +255,10 @@ MPCReturn MPC::runMPC(State &x0)
         optimal_solution_ = solver_interface_->solveMPC(stages_,x0_normalized, &solver_status);
         optimal_solution_ = deNormalizeSolution(optimal_solution_);
         if(solver_status != 0)
+        {
             n_no_solves_sqp_++;
+            error_count(solver_status-1)++; // unsolvable counts to determine feasibiliy
+        }
         if(solver_status <= 1)
             initial_guess_ = sqpSolutionUpdate(initial_guess_,optimal_solution_);
     }
@@ -267,8 +280,9 @@ MPCReturn MPC::runMPC(State &x0)
     return {initial_guess_[0].uk,initial_guess_,time_nmpc};
 }
 
-void MPC::setTrack(const Eigen::VectorXd &X, const Eigen::VectorXd &Y){
+ArcLengthSpline MPC::setTrack(const Eigen::VectorXd &X, const Eigen::VectorXd &Y){
     track_.gen2DSpline(X,Y);
+    return track_;
 }
 
 

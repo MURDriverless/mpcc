@@ -16,16 +16,16 @@
 
   "m"   : 190.0,
   "Iz"  : 110.0,
-  "lf"  : 0.775,
-  "lr"  : 0.775,
+  "lf"  : 1.22,
+  "lr"  : 1.22,
 
   "car_l": 1.45,
-  "car_w": 0.69,
+  "car_w": 0.7,
 
   "g"   : 9.81,
 
-  "R_in" : 0.7,
-  "R_out" : 0.7,
+  "R_in" : 1.2,
+  "R_out" : 1.2,
 
   "max_dist_proj": 3.0,
 
@@ -34,7 +34,7 @@
 
   "maxAlpha" : 0.15,
 
-  "initial_velocity" : 1.0,
+  "initial_velocity" : 15.0,
   "s_trust_region" : 30.0,
 
   "vx_zero": 0.3

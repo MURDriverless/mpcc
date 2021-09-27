@@ -280,21 +280,40 @@ LinModelMatrix Model::getModelJacobian(const State &x, const Input &u) const
 // Mixed RK4 - EXPM method
 LinModelMatrix Model::discretizeModel(const LinModelMatrix &lin_model_c, const State &x, const Input &u,const State &x_next) const
 {
-    // disctetize the continuous time linear model \dot x = A x + B u + g using ZHO
-    Eigen::Matrix<double,NX+NU,NX+NU> temp = Eigen::Matrix<double,NX+NU,NX+NU>::Zero();
-    // building matrix necessary for expm
-    // temp = Ts*[A,B,g;zeros]
-    temp.block<NX,NX>(0,0) = lin_model_c.A;
-    temp.block<NX,NU>(0,NX) = lin_model_c.B;
-    temp = temp*Ts_;
+    // exact ZOH discretization
+    // A_d = expm(A*Ts)
+    const A_MPC A_d = (lin_model_c.A*Ts_).exp();
 
-    // take the matrix exponential of temp
-    const Eigen::Matrix<double,NX+NU,NX+NU> temp_res = temp.exp();
-    // extract dynamics out of big matrix
-    // x_{k+1} = Ad x_k + Bd u_k
-    //temp_res = [Ad,Bd;zeros]
-    const A_MPC A_d = temp_res.block<NX,NX>(0,0);
-    const B_MPC B_d = temp_res.block<NX,NU>(0,NX);
+    // B_d = A\(A_d - I)*B
+    A_MPC eye_A = Eigen::Matrix<double,NX,NX>::Identity();
+    A_MPC tmp = A_d - eye_A;
+    const B_MPC B_d = lin_model_c.A.fullPivLu().solve(tmp*lin_model_c.B); // https://eigen.tuxfamily.org/dox/group__TutorialLinearAlgebra.html
+
+    // // g_d = A\(A_d - I)*g
+    // g_MPC g_tmp = lin_model_c.A.fullPivHouseholderQr().solve(tmp*lin_model_c.g);
+    // const g_MPC t_g_d = -stateToVector(x_next) + g_tmp;
+
+    // std::cout << "exact g after minus" << std::endl << t_g_d << std::endl;
+
+    // // disctetize the continuous time linear model \dot x = A x + B u + g using ZHO
+    // Eigen::Matrix<double,NX+NU,NX+NU> temp = Eigen::Matrix<double,NX+NU,NX+NU>::Zero();
+    // // Eigen::Matrix<double,NX+NU+1,NX+NU+1> temp = Eigen::Matrix<double,NX+NU+1,NX+NU+1>::Zero();
+    // // building matrix necessary for expm
+    // // temp = Ts*[A,B,g;zeros]
+    // temp.block<NX,NX>(0,0) = lin_model_c.A;
+    // temp.block<NX,NU>(0,NX) = lin_model_c.B;
+    // // temp.block<NX,1>(0,NX+NU) = lin_model_c.g;
+    // temp = temp*Ts_;
+
+    // // take the matrix exponential of temp
+    // const Eigen::Matrix<double,NX+NU,NX+NU> temp_res = temp.exp();
+    // // const Eigen::Matrix<double,NX+NU+1,NX+NU+1> temp_res = temp.exp();
+    // // extract dynamics out of big matrix
+    // // x_{k+1} = Ad x_k + Bd u_k
+    // //temp_res = [Ad,Bd;zeros]
+    // const A_MPC A_d = temp_res.block<NX,NX>(0,0);
+    // const B_MPC B_d = temp_res.block<NX,NU>(0,NX);
+    // // const g_MPC g_d = temp_res.block<NX,1>(0,NX+NU);
 
     // TODO: use correct RK4 instead of inline RK4,
     // main uses expm but here use RK4
@@ -307,9 +326,8 @@ LinModelMatrix Model::discretizeModel(const LinModelMatrix &lin_model_c, const S
     // combining to give output
     const StateVector x_RK = x_vec + Ts_*(k1/6.+k2/3.+k3/3.+k4/6.);
 
-    const g_MPC g_d =  -stateToVector(x_next) + x_RK;
+    const g_MPC g_d = -stateToVector(x_next) + x_RK;
 
-    // return {A_d,B_d,g_d};
     return {A_d,B_d,g_d};
 }
 

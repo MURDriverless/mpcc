@@ -152,7 +152,7 @@ RawPath ArcLengthSpline::outlierRemoval(const Eigen::VectorXd &X_original,const 
         dy = Y_original(i)-Y_original(j);
         dist = std::sqrt(dx*dx + dy*dy);
         // if this distance is smaller than 0.7 the mean distance add this point to the new X-Y path
-        if(dist >= 0.7*meanDist)
+        if(dist >= 0.1*meanDist)
         {
             resampled_path.X(k) = X_original(i);
             resampled_path.Y(k) = Y_original(i);

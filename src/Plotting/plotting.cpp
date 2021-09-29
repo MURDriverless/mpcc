@@ -15,6 +15,11 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #include "plotting.h"
+
+// To write csv file
+#include <iostream>
+#include <fstream>
+
 namespace mpcc{
 
 Plotting::Plotting(double Ts,PathToJson path)
@@ -175,18 +180,30 @@ void Plotting::plotRun(const std::list<MPCReturn> &log, const TrackPos &track_xy
     plt::plot(plot_dvs);
     plt::ylabel("dot{v_s} [m/s^2]");
 
-    plt::figure(5);
-    plt::plot(plot_s);
-    plt::ylabel("s [m]");
+    // Write steering into csv
+    std::ofstream steerinfo;
+    steerinfo.open("/workspace/steering.csv");
+    steerinfo << "i,delta,dot_delta\n";
+    int index = 0;
+    for (auto i = plot_delta.begin(); i != plot_delta.end(); ++i)
+    {
+        steerinfo << index << "," << plot_delta[index] << "," << plot_ddelta[index] << ",\n";
+        index++;
+    }
+    steerinfo.close();
 
-    plt::figure(6);
+    // plt::figure(5);
+    // plt::plot(plot_s);
+    // plt::ylabel("s [m]");
+
+    plt::figure(5);
     plt::subplot(1,2,1);
     plt::plot(plot_alpha_f);
     plt::ylabel("alpha_f [rad]");
     plt::subplot(1,2,2);
-    plt::plot(plot_F_ry0,plot_F_rx0);
-    plt::plot(plot_F_ry1,plot_F_rx1);
-    plt::plot(plot_eps_x,plot_eps_y);
+    plt::plot(plot_F_ry1,plot_F_rx1, "g");
+    plt::plot(plot_F_ry0,plot_F_rx0, "b");
+    plt::plot(plot_eps_x,plot_eps_y, "k");
     plt::axis("equal");
     plt::xlabel("F_y [N]");
     plt::ylabel("F_x [N]");

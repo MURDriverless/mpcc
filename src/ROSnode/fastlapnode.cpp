@@ -282,10 +282,10 @@ mpcc::State FastLapControlNode::update(const mpcc::State& x0, const mpcc::Input&
     x_new.vx = this->vx;
     x_new.vy = this->vy;
     x_new.r = this->wz;
-    // Copy over from RK4
-    x_new.s = x0.s;
     x_new.D = this->accel_D;
     x_new.delta = this->steering_angle;
+    // Copy over from RK4
+    x_new.s = x0.s;
     // x_new.D = x0.D;
     // x_new.delta = x0.delta;
     x_new.vs = x0.vs;

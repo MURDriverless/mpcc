@@ -36,7 +36,7 @@ using json = nlohmann::json;
 #include <iomanip>
 
 // Statistics Print constants
-#define STATROW 14
+#define STATROW 16
 #define BARWIDTH 30
 
 // Lap constants
@@ -77,7 +77,9 @@ void printStatistics(mpcc::State x0, Eigen::Vector4d command, mpcc::ArcLengthSpl
     std::cout << "vy: " << x0.vy << std::endl;
     std::cout << "w: " << x0.r << std::endl;
     std::cout << "D: " << command(0) << std::endl;
+    std::cout << "dD: " << command(2) << std::endl;
     std::cout << "delta: " << command(1) << std::endl;
+    std::cout << "dDelta: " << command(3) << std::endl;
     std::cout << "Controller Status: " << std::endl;
     std::cout << "Solve time: " << t << "s, Hz: " << 1.0/t << std::endl;
     std::cout << "exitflag1 count: " << int(error_count(0)) << ", exitflag2 count: " << int(error_count(1)) << std::endl;
@@ -302,12 +304,12 @@ int main(int argc, char **argv) {
             // controlNode.publishActuation(mpc_sol.u0.dD, mpc_sol.u0.dDelta);
             log.push_back(mpc_sol);
 
-            x0 = integrator.simTimeStep(x0,mpc_sol.u0,jsonConfig["Ts"]); // Update state with RK4
+            x0 = integrator.simTimeStep(x0, mpc_sol.u0,jsonConfig["Ts"]); // Update state with RK4
             // ROS_INFO("States:\nx:%lf\ny:%lf\nyaw:%lf\ns:%lf.", x0.X, x0.Y, x0.phi, x0.s);
             // ROS_INFO("Acceleration input:\nState:%lf\nmpcsol:%lf\n.", x0.D, mpc_sol.u0.dD);
             controlNode.publishActuation(x0.D, x0.delta);
 
-            Eigen::Vector4d command(x0.D, x0.delta, 0, 0);
+            Eigen::Vector4d command(x0.D, x0.delta, mpc_sol.u0.dD, mpc_sol.u0.dDelta);
 
             if(comm)
             {
@@ -342,7 +344,7 @@ int main(int argc, char **argv) {
             {
                 fastlap_stats(2) = fastlap_stats(3);
             }
-            if((50*x0.s) < cur_s && x0.s < 50) // Finished a lap, progress resets
+            if((50*x0.s) < cur_s && x0.s < 10) // Finished a lap, progress resets
             {
                 auto tnow = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(tnow - startTime);

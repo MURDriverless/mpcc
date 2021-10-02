@@ -6,7 +6,7 @@
   "n_sim": 5000,
   "Ts": 0.1,
   "Hz": 10,
-  "v0": 1.0,
+  "v0": 2.5,
   
   "model_path": "/workspace/src/simulation/alexmpcc/src/Params/model.json",
   "cost_path": "/workspace/src/simulation/alexmpcc/src/Params/cost.json",

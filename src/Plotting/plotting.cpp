@@ -125,15 +125,19 @@ void Plotting::plotRun(const std::list<MPCReturn> &log, const TrackPos &track_xy
     }
 
     plt::figure(1);
-    plt::plot(plot_xc,plot_yc,"r--");
-    plt::plot(plot_xi,plot_yi,"k-");
+    plt::named_plot("Track Bounds", plot_xi,plot_yi,"k-");
     plt::plot(plot_xo,plot_yo,"k-");
-    plt::plot(plot_x,plot_y,"b-");
-    plt::plot(plot_innerbound_x,plot_innerbound_y,"r-");
+    plt::named_plot("Predicted Bounds", plot_innerbound_x,plot_innerbound_y,"r-");
     plt::plot(plot_outerbound_x,plot_outerbound_y,"r-");
+    plt::named_plot("Actual Path", plot_x,plot_y,"b-");
+    plt::named_plot("Centerline Reference", plot_xc,plot_yc,"r--");
     plt::axis("equal");
     plt::xlabel("X [m]");
     plt::ylabel("Y [m]");
+    // plt::xlim(-39, 47);
+    // plt::ylim(-77, 3);
+    plt::legend();
+
     plt::figure(2);
     plt::subplot(3,2,1);
     plt::plot(plot_x);
@@ -156,18 +160,15 @@ void Plotting::plotRun(const std::list<MPCReturn> &log, const TrackPos &track_xy
 
 
     plt::figure(3);
-    plt::subplot(4,1,1);
+    plt::subplot(3,1,1);
     plt::plot(plot_d);
     plt::ylabel("D [-]");
-    plt::subplot(4,1,2);
+    plt::subplot(3,1,2);
     plt::plot(plot_delta);
     plt::ylabel("delta [rad]");
-    plt::subplot(4,1,3);
+    plt::subplot(3,1,3);
     plt::plot(plot_vs);
     plt::ylabel("v_s [m/s]");
-    plt::subplot(4,1,4);
-    plt::plot(plot_lapTime, "*");
-    plt::ylabel("lap time [s]");
 
     plt::figure(4);
     plt::subplot(3,1,1);
@@ -209,6 +210,10 @@ void Plotting::plotRun(const std::list<MPCReturn> &log, const TrackPos &track_xy
     plt::ylabel("F_x [N]");
     plt::show();
 
+    plt::figure(6);
+    plt::bar(plot_lapTime);
+    plt::ylabel("lap time [s]");
+
 }
 void Plotting::plotSim(const std::list<MPCReturn> &log, const TrackPos &track_xy, const mpcc::ArcLengthSpline &track) const
 {
@@ -232,22 +237,22 @@ void Plotting::plotSim(const std::list<MPCReturn> &log, const TrackPos &track_xy
 
     for(MPCReturn log_i : log)
     {
-        plot_horizonx.push_back(log_i.mpc_horizon[0].xk.X);
-        plot_horizony.push_back(log_i.mpc_horizon[0].xk.Y);
+        plot_x.push_back(log_i.mpc_horizon[0].xk.X);
+        plot_y.push_back(log_i.mpc_horizon[0].xk.Y);
     }
 
     for(MPCReturn log_i : log)
     {
-        plot_x.resize(0);
-        plot_y.resize(0);
+        plot_horizonx.resize(0);
+        plot_horizony.resize(0);
         plot_innerbound_x.resize(0);
         plot_innerbound_y.resize(0);
         plot_outerbound_x.resize(0);
         plot_outerbound_y.resize(0);
         for(int j=0;j<log_i.mpc_horizon.size();j++)
         {
-            plot_x.push_back(log_i.mpc_horizon[j].xk.X);
-            plot_y.push_back(log_i.mpc_horizon[j].xk.Y);
+            plot_horizonx.push_back(log_i.mpc_horizon[j].xk.X);
+            plot_horizony.push_back(log_i.mpc_horizon[j].xk.Y);
 
             // given arc length s and the track -> compute linearized track constraints
             double s = log_i.mpc_horizon[j].xk.s;
@@ -266,20 +271,21 @@ void Plotting::plotSim(const std::list<MPCReturn> &log, const TrackPos &track_xy
             plot_innerbound_x.push_back(pos_inner(0));
             plot_innerbound_y.push_back(pos_inner(1));
 
-            // outer
+            // outer estimated boundary
             plot_outerbound_x.push_back(pos_outer(0));
             plot_outerbound_y.push_back(pos_outer(1));
         }
         plt::clf();
-        plt::plot(plot_xc,plot_yc,"r--");
-        plt::plot(plot_xi,plot_yi,"k-");
+        plt::named_plot("Track Bounds", plot_xi,plot_yi,"k-");
         plt::plot(plot_xo,plot_yo,"k-");
-        plotBox(log_i.mpc_horizon[0].xk);
-        plt::plot(plot_innerbound_x,plot_innerbound_y,"r-");
+        plt::named_plot("Predicted Bounds", plot_innerbound_x,plot_innerbound_y,"r-");
         plt::plot(plot_outerbound_x,plot_outerbound_y,"r-");
-        plt::plot(plot_horizonx,plot_horizony,"b-");
-        plt::plot(plot_x,plot_y,"g-");
+        plotBox(log_i.mpc_horizon[0].xk);
+        plt::named_plot("Actual Path", plot_x,plot_y,"b-");
+        plt::named_plot("Centerline Reference", plot_xc,plot_yc,"r--");
+        plt::named_plot("Prediction Horizon Path", plot_horizonx,plot_horizony,"g-");
         plt::axis("equal");
+        plt::legend();
         // plt::xlim(-2,2);
         // plt::ylim(-2,2);
         plt::pause(0.01);

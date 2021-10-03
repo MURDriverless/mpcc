@@ -208,12 +208,12 @@ void Plotting::plotRun(const std::list<MPCReturn> &log, const TrackPos &track_xy
     plt::axis("equal");
     plt::xlabel("F_y [N]");
     plt::ylabel("F_x [N]");
-    plt::show();
 
     plt::figure(6);
     plt::bar(plot_lapTime);
     plt::ylabel("lap time [s]");
 
+    plt::show();
 }
 void Plotting::plotSim(const std::list<MPCReturn> &log, const TrackPos &track_xy, const mpcc::ArcLengthSpline &track) const
 {

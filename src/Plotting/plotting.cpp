@@ -26,6 +26,7 @@ Plotting::Plotting(double Ts,PathToJson path)
 :model_(Model(Ts,path)),
 param_(Param(path.param_path))
 {
+    this->Ts = Ts;
 }
 void Plotting::plotRun(const std::list<MPCReturn> &log, const TrackPos &track_xy, const mpcc::ArcLengthSpline &track, const std::vector<double> plot_lapTime) const
 {
@@ -184,7 +185,7 @@ void Plotting::plotRun(const std::list<MPCReturn> &log, const TrackPos &track_xy
     // Write steering into csv
     std::ofstream steerinfo;
     steerinfo.open("/workspace/steering.csv");
-    steerinfo << "i,delta,dot_delta\n";
+    steerinfo << "i (" << 1/Ts << "Hz),delta,dot_delta\n";
     int index = 0;
     for (auto i = plot_delta.begin(); i != plot_delta.end(); ++i)
     {
@@ -192,6 +193,17 @@ void Plotting::plotRun(const std::list<MPCReturn> &log, const TrackPos &track_xy
         index++;
     }
     steerinfo.close();
+    // Write D pedal input and velocity into csv
+    std::ofstream dinfo;
+    dinfo.open("/workspace/pedal.csv");
+    dinfo << "i (" << 1/Ts << "Hz),v_x,D,dot_D\n";
+    index = 0;
+    for (auto i = plot_d.begin(); i != plot_d.end(); ++i)
+    {
+        dinfo << index << "," << plot_vx[index] << "," << plot_d[index] << "," << plot_dd[index] << ",\n";
+        index++;
+    }
+    dinfo.close();
 
     // plt::figure(5);
     // plt::plot(plot_s);

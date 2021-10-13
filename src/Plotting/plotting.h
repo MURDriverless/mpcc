@@ -38,7 +38,8 @@ public:
 
 private:
     void plotBox(const State &x0) const;
-
+    
+    double Ts;
     Model model_;
     Param param_;
 };
